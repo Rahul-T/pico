@@ -89,3 +89,33 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_captsc(void)
+{
+  void* func;
+  if (argptr(0, (void*)&func, sizeof(func)) < 0)
+    return -1;
+  return capturescreen(myproc()->pid, func);
+}
+
+int
+sys_freesc(void)
+{
+  return freescreen(myproc()->pid);
+}
+
+int
+sys_updatesc(void) {
+  int x, y, color;
+  char* content;
+  if(argint(0, &x) < 0)
+    return -1;
+  if(argint(1, &y) < 0)
+    return -1;
+  if (argptr(2, (void*)&content, sizeof(content)) < 0)
+    return -1;
+  if(argint(3, &color) < 0)
+    return -1;
+  return updatescreen(myproc()->pid, x, y, content, color);
+}

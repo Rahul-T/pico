@@ -37,3 +37,8 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+// text editor added
+int captsc(void*);
+int freesc(void);
+int updatesc(int, int, char*, int);

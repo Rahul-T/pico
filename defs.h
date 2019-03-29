@@ -17,6 +17,9 @@ void            brelse(struct buf*);
 void            bwrite(struct buf*);
 
 // console.c
+int				capturescreen(int pid, void* func);
+int				freescreen(int pid);
+int 			updatescreen(int pid, int x, int y, char* content, int color);
 void            consoleinit(void);
 void            cprintf(char*, ...);
 void            consoleintr(int(*)(void));
@@ -185,6 +188,11 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+
+// text editor syscalls
+// int 			captsc(void);
+// int 			freesc(void);
+// int 			updatesc(int, int, char*, int);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

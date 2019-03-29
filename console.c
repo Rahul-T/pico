@@ -14,10 +14,12 @@
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
+#include "kbd.h"
 
 static void consputc(int);
 
 static int panicked = 0;
+static int screencaptured = 0;
 
 static struct {
   struct spinlock lock;
@@ -54,6 +56,9 @@ printint(int xx, int base, int sign)
 void
 cprintf(char *fmt, ...)
 {
+
+  if (screencaptured)
+    return;
   int i, c, locking;
   uint *argp;
   char *s;
@@ -127,6 +132,62 @@ panic(char *s)
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4
 static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
+static ushort crtbackup[2000]; // array of size 25 * 80
+
+/*
+ * Set the capturescreen to the pid specified,
+ * so only that pid can modify the screen.
+ * Also clears the screen.
+ */
+int
+capturescreen(int pid, void* func) {
+  acquire(&cons.lock);
+  if (screencaptured) {
+    release(&cons.lock);
+    return -1;
+  }
+  screencaptured = pid;
+  handler = func;
+  release(&cons.lock);
+  memmove(crtbackup, crt, sizeof(crt[0])*25*80);
+  memset(crt, 0, sizeof(crt[0]) * 25 * 80);
+  return 0;
+}
+
+/*
+ * Sets the capturescreen to 0 so that
+ * other processes can draw on the screen.
+ */
+int
+freescreen(int pid) {
+  acquire(&cons.lock);
+  if (screencaptured == pid) {
+    screencaptured = 0;
+    release(&cons.lock);
+    memmove(crt, crtbackup, sizeof(crt[0])*25*80);
+    return 0;
+  }
+  release(&cons.lock);
+  return -1;
+}
+int
+updatescreen(int pid, int x, int y, char* content, int color) {
+  if (pid != screencaptured) {
+    return -1;
+  }
+  int initialpos = x + 80*y;
+  char c;
+  int i;
+  for(i = 0; (c = content[i]) != 0; i++) {
+    // crt[initialpos+i] = (color<<8) || c;
+    crt[initialpos + i] = (c&0xff) | (color<<8);
+  }
+  return i;
+}
+
+int getchar() {
+  while()
+}
 
 static void
 cgaputc(int c)
@@ -169,6 +230,11 @@ consputc(int c)
     cli();
     for(;;)
       ;
+  }
+  if (screencaptured && c != '\n') {
+    cgaputc(c);
+    // (handler)(c);
+    return;
   }
 
   if(c == BACKSPACE){
@@ -296,4 +362,3 @@ consoleinit(void)
 
   ioapicenable(IRQ_KBD, 0);
 }
-

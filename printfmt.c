@@ -232,7 +232,9 @@ number:
     case '%':
       putch(ch, putdat);
       break;
-
+    case 'r':
+      putch('r', putdat);
+      break;
     // unrecognized escape sequence - just print it literally
     default:
       putch('%', putdat);
