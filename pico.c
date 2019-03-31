@@ -7,7 +7,7 @@
 #define TOTAL_CHARS 1920
 #define C(x)  ((x)-'@')  // Control-x
 
-#define UI_COLOR 0xe0
+#define UI_COLOR 0xc0
 #define TEXT_COLOR 0x07
 
 char buf[TOTAL_CHARS];
@@ -44,14 +44,9 @@ drawFooter() {
 
 int
 main(int argc, char *argv[]) {
-	captsc((void*) manageInput);
+	captsc();
 	drawHeader();
 	drawFooter();
-	int c = 0;
-
-	while (1) {
-
-	}
 	read(0, 0, 100);
 	freesc();
 

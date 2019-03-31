@@ -93,10 +93,7 @@ sys_uptime(void)
 int
 sys_captsc(void)
 {
-  void* func;
-  if (argptr(0, (void*)&func, sizeof(func)) < 0)
-    return -1;
-  return capturescreen(myproc()->pid, func);
+  return capturescreen(myproc()->pid);
 }
 
 int

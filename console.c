@@ -14,7 +14,6 @@
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
-#include "kbd.h"
 
 static void consputc(int);
 
@@ -140,14 +139,13 @@ static ushort crtbackup[2000]; // array of size 25 * 80
  * Also clears the screen.
  */
 int
-capturescreen(int pid, void* func) {
+capturescreen(int pid) {
   acquire(&cons.lock);
   if (screencaptured) {
     release(&cons.lock);
     return -1;
   }
   screencaptured = pid;
-  handler = func;
   release(&cons.lock);
   memmove(crtbackup, crt, sizeof(crt[0])*25*80);
   memset(crt, 0, sizeof(crt[0]) * 25 * 80);
@@ -183,10 +181,6 @@ updatescreen(int pid, int x, int y, char* content, int color) {
     crt[initialpos + i] = (c&0xff) | (color<<8);
   }
   return i;
-}
-
-int getchar() {
-  while()
 }
 
 static void
@@ -252,7 +246,8 @@ struct {
   uint e;  // Edit index
 } input;
 
-#define C(x)  ((x)-'@')  // Control-x
+// C('A') == Control-A
+#define C(x) (x - '@')
 
 void
 consoleintr(int (*getc)(void))
