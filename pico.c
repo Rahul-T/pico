@@ -18,14 +18,15 @@ printfile(int fd)
 	int n;
 
 	while((n = read(fd, buf, TOTAL_CHARS)) > 0) {
-		if (write(1, buf, n) != n) {
-			printf(1, "cat: write error\n");
-			exit();
-		}
+		// if (write(1, buf, n) != n) {
+		// 	printf(1, "Write error\n");
+		// 	return;
+		// }
+		updatesc(0, 1, buf, TEXT_COLOR);
 	}
 	if(n < 0){
-		printf(1, "cat: read error\n");
-		exit();
+		printf(1, "Read error\n");
+		return;
 	}
 	close(fd);
 }
@@ -47,35 +48,20 @@ main(int argc, char *argv[]) {
 	captsc();
 	drawHeader();
 	drawFooter();
-	read(0, 0, 100);
-	freesc();
-
-	exit();
 
 	int fd;
 
 	if (argc == 2) {
 		if((fd = open(argv[1], 0)) < 0){
-			printf(1, "cat: cannot open %s\n", argv[1]);
-			exit();
+			printf(1, "Cannot open %s\n", argv[1]);
+		} else {
+			printfile(fd);
 		}
-		printfile(fd);
 	} else {
 		printf(1, "No file selected");
-		// for (int i = 0; i < HEIGHT-2; i++) {
-		// 	printf(1, "\n");
-		// }
 	}
-	char c;
-	while(read(0, (void*) &c, 1) >= 0){
-    switch(c){
-    case C('C'):
-    	exit();
-    	break;
-    default:
-    	printf(1, "%c", c);
-    	break;
-    }
-  }
+	read(0, 0, 100);
+	freesc();
+
 	exit();
 }

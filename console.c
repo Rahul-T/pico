@@ -254,6 +254,19 @@ consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
 
+  // static int pos = 0;
+
+  // if (screencaptured != 0) {
+  //   c = getc();
+  //   if (c >= 0) {
+  //     char hello[2];
+  //     hello[0] = (char) c&0xff;
+  //     hello[1] = 0;
+  //     updatescreen(screencaptured, pos++, 1, (char*) hello, 0x07);
+  //     return;
+  //   }
+  // }
+
   acquire(&cons.lock);
   while((c = getc()) >= 0){
     switch(c){
