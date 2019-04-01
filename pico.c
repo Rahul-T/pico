@@ -11,6 +11,7 @@
 #define TEXT_COLOR 0x07
 
 char buf[TOTAL_CHARS];
+// static int lastChar;
 
 void
 printfile(int fd)
@@ -43,9 +44,16 @@ drawFooter() {
 	updatesc(0, 24, " PRESS ENTER TO CLOSE                                                           ", UI_COLOR);
 }
 
+void
+handleInput() {
+	updatesc(0, 1, "new input!", TEXT_COLOR);
+	// printf(1, "new input");
+}
+
 int
 main(int argc, char *argv[]) {
-	captsc();
+	printf(1, "%p", handleInput);
+	captsc(handleInput);
 	drawHeader();
 	drawFooter();
 

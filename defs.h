@@ -17,7 +17,7 @@ void            brelse(struct buf*);
 void            bwrite(struct buf*);
 
 // console.c
-int				capturescreen(int pid);
+int				capturescreen(int pid, void* handler_voidptr);
 int				freescreen(int pid);
 int 			updatescreen(int pid, int x, int y, char* content, int color);
 void            consoleinit(void);

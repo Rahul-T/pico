@@ -19,6 +19,8 @@ static void consputc(int);
 
 static int panicked = 0;
 static int screencaptured = 0;
+typedef void (*handler_t)(int);
+static handler_t handler;
 
 static struct {
   struct spinlock lock;
@@ -55,9 +57,6 @@ printint(int xx, int base, int sign)
 void
 cprintf(char *fmt, ...)
 {
-
-  if (screencaptured)
-    return;
   int i, c, locking;
   uint *argp;
   char *s;
@@ -139,16 +138,18 @@ static ushort crtbackup[2000]; // array of size 25 * 80
  * Also clears the screen.
  */
 int
-capturescreen(int pid) {
+capturescreen(int pid, void* handler_voidptr) {
   acquire(&cons.lock);
   if (screencaptured) {
     release(&cons.lock);
     return -1;
   }
+  handler = handler_voidptr;
   screencaptured = pid;
   release(&cons.lock);
   memmove(crtbackup, crt, sizeof(crt[0])*25*80);
   memset(crt, 0, sizeof(crt[0]) * 25 * 80);
+  cprintf("%p\n", handler_voidptr);
   return 0;
 }
 
@@ -254,18 +255,13 @@ consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
 
-  // static int pos = 0;
-
-  // if (screencaptured != 0) {
-  //   c = getc();
-  //   if (c >= 0) {
-  //     char hello[2];
-  //     hello[0] = (char) c&0xff;
-  //     hello[1] = 0;
-  //     updatescreen(screencaptured, pos++, 1, (char*) hello, 0x07);
-  //     return;
-  //   }
-  // }
+  if (screencaptured != 0) {
+    cprintf("%p\n", handler);
+    while((c = getc()) >= 0) {
+      myproc()->tf->eip = (uint) handler;
+    }
+    // return;
+  }
 
   acquire(&cons.lock);
   while((c = getc()) >= 0){

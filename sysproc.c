@@ -93,7 +93,10 @@ sys_uptime(void)
 int
 sys_captsc(void)
 {
-  return capturescreen(myproc()->pid);
+  void* handler;
+  if (argptr(0, (void*)&handler, sizeof(handler)) < 0)
+    return -1;
+  return capturescreen(myproc()->pid, handler);
 }
 
 int
