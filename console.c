@@ -192,6 +192,9 @@ cgaputc(int c)
 {
   int pos;
 
+  if (screencaptured)
+    return;
+
   // Cursor position: col + 80*row.
   outb(CRTPORT, 14);
   pos = inb(CRTPORT+1) << 8;
@@ -229,11 +232,6 @@ consputc(int c)
     for(;;)
       ;
   }
-  if (screencaptured && c != '\n') {
-    cgaputc(c);
-    // (handler)(c);
-    return;
-  }
 
   if(c == BACKSPACE){
     uartputc('\b'); uartputc(' '); uartputc('\b');
@@ -262,6 +260,7 @@ consoleintr(int (*getc)(void))
   if (screencaptured != 0) {
     while((c = getc()) >= 0) {
       buffer = c;
+      cprintf("%d\n", c);
     }
     return;
   }

@@ -43,7 +43,7 @@ drawHeader() {
 
 void
 drawFooter() {
-	updatesc(0, 24, " PRESS ENTER TO CLOSE                                                           ", UI_COLOR);
+	updatesc(0, 24, " ^Q - Quit                                                                      ", UI_COLOR);
 }
 
 void
@@ -61,13 +61,6 @@ main(int argc, char *argv[]) {
 	captsc(&c);
 	drawHeader();
 	drawFooter();
-	while(1) {
-		while ((c = getkey()) <= 0) {
-		}
-		handleInput(c);
-		c = 0;
-	}
-
 	int fd;
 
 	if (argc == 2) {
@@ -78,6 +71,12 @@ main(int argc, char *argv[]) {
 		}
 	} else {
 		printf(1, "No file selected");
+	}
+	while(1) {
+		while ((c = getkey()) <= 0) {
+		}
+		handleInput(c);
+		c = 0;
 	}
 	read(0, 0, 100);
 	freesc();
