@@ -11,6 +11,8 @@
 #define TEXT_COLOR 0x07
 
 char buf[TOTAL_CHARS];
+int currChar = 0;
+int c = 0;
 // static int lastChar;
 
 void
@@ -45,17 +47,26 @@ drawFooter() {
 }
 
 void
-handleInput() {
-	updatesc(0, 1, "new input!", TEXT_COLOR);
+handleInput(int i) {
+	if (i == 17) {
+		exit();
+	}
+	buf[currChar++] = (char) i & 0xff;
+	updatesc(0, 1, buf, TEXT_COLOR);
 	// printf(1, "new input");
 }
 
 int
 main(int argc, char *argv[]) {
-	printf(1, "%p", handleInput);
-	captsc(handleInput);
+	captsc(&c);
 	drawHeader();
 	drawFooter();
+	while(1) {
+		while ((c = getkey()) <= 0) {
+		}
+		handleInput(c);
+		c = 0;
+	}
 
 	int fd;
 

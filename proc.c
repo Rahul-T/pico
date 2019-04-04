@@ -231,6 +231,8 @@ exit(void)
   struct proc *p;
   int fd;
 
+  freescreen(curproc->pid);
+
   if(curproc == initproc)
     panic("init exiting");
 

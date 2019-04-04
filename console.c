@@ -19,8 +19,10 @@ static void consputc(int);
 
 static int panicked = 0;
 static int screencaptured = 0;
-typedef void (*handler_t)(int);
-static handler_t handler;
+// typedef void (*handler_t)(int);
+// static handler_t handler;
+//int* handlechar = 0;
+int buffer;
 
 static struct {
   struct spinlock lock;
@@ -144,12 +146,13 @@ capturescreen(int pid, void* handler_voidptr) {
     release(&cons.lock);
     return -1;
   }
-  handler = handler_voidptr;
+  // handler = handler_voidptr;
+  // *handlechar = 1;
   screencaptured = pid;
   release(&cons.lock);
   memmove(crtbackup, crt, sizeof(crt[0])*25*80);
   memset(crt, 0, sizeof(crt[0]) * 25 * 80);
-  cprintf("%p\n", handler_voidptr);
+  // cprintf("%p\n", handler_voidptr);
   return 0;
 }
 
@@ -254,13 +257,13 @@ void
 consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
+  
 
   if (screencaptured != 0) {
-    cprintf("%p\n", handler);
     while((c = getc()) >= 0) {
-      myproc()->tf->eip = (uint) handler;
+      buffer = c;
     }
-    // return;
+    return;
   }
 
   acquire(&cons.lock);
@@ -365,4 +368,15 @@ consoleinit(void)
   cons.locking = 1;
 
   ioapicenable(IRQ_KBD, 0);
+}
+
+int
+readkey(int pid)
+{
+  if (pid != screencaptured)
+    return -1;
+
+  int temp = buffer;
+  buffer = 0;
+  return temp;
 }

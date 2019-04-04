@@ -23,3 +23,4 @@
 #define SYS_captsc 22
 #define SYS_freesc 23
 #define SYS_updatesc 24
+#define SYS_getkey 25

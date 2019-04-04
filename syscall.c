@@ -106,6 +106,7 @@ extern int sys_uptime(void);
 extern int sys_captsc(void);
 extern int sys_freesc(void);
 extern int sys_updatesc(void);
+extern int sys_getkey(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -132,6 +133,7 @@ static int (*syscalls[])(void) = {
 [SYS_captsc]  sys_captsc,
 [SYS_freesc]  sys_freesc,
 [SYS_updatesc] sys_updatesc,
+[SYS_getkey]  sys_getkey,
 };
 
 void

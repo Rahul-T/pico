@@ -93,7 +93,7 @@ sys_uptime(void)
 int
 sys_captsc(void)
 {
-  void* handler;
+  int* handler;
   if (argptr(0, (void*)&handler, sizeof(handler)) < 0)
     return -1;
   return capturescreen(myproc()->pid, handler);
@@ -118,4 +118,10 @@ sys_updatesc(void) {
   if(argint(3, &color) < 0)
     return -1;
   return updatescreen(myproc()->pid, x, y, content, color);
+}
+
+int 
+sys_getkey(void)
+{
+  return readkey(myproc()->pid);
 }
