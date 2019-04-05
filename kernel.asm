@@ -1652,7 +1652,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
     if(c == '\n'){
       c = ' ';
     }
-
+    
     crt[initialpos + i] = (c&0xff) | (color<<8);
 801009b6:	8d 0c 03             	lea    (%ebx,%eax,1),%ecx
 801009b9:	0f 44 d7             	cmove  %edi,%edx
@@ -1668,7 +1668,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
     if(c == '\n'){
       c = ' ';
     }
-
+    
     crt[initialpos + i] = (c&0xff) | (color<<8);
 801009c3:	66 89 94 09 00 80 0b 	mov    %dx,-0x7ff48000(%ecx,%ecx,1)
 801009ca:	80 
@@ -1682,7 +1682,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
 801009cf:	84 c9                	test   %cl,%cl
 801009d1:	75 dd                	jne    801009b0 <updatescreen+0x40>
     }
-
+    
     crt[initialpos + i] = (c&0xff) | (color<<8);
   }
   return i;

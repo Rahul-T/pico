@@ -208,7 +208,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
     if(c == '\n'){
       c = ' ';
     }
-
+    
     crt[initialpos + i] = (c&0xff) | (color<<8);
   }
   return i;

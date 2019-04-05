@@ -182,7 +182,16 @@ handleInput(int i) {
 	}
 	//backspace
 	else if(i == 127){
-
+		if(currChar > 0){
+			currChar--;
+			int bufindex = currChar;
+			while(((bufindex+1) % WIDTH) != 0){
+				buf[bufindex] = buf[bufindex+1];
+				bufindex++;
+			}
+			buf[bufindex] = ' ';
+			updatesc(0, 1, buf, TEXT_COLOR);
+		}
 	}
 	//On right edge of window 
 	else if((currChar+1) % WIDTH == 0){
