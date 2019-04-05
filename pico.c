@@ -225,6 +225,69 @@ cutline(void){
 }
 
 void
+newline(void)
+{
+	saveedits();
+	int line = currChar/WIDTH;
+	struct fileline* cur = firstOnScreen;
+	for(int i=0; i<line; i++){
+		cur = cur->next;
+	}
+	int linechar = currChar % WIDTH;
+	//enter pressed in any column except first
+	if(linechar != 0){
+		struct fileline* newfileline = malloc(sizeof(struct fileline));
+		int i = 0;
+		for(i = 0; linechar<WIDTH; i++, linechar++){
+			newfileline->line[i] = cur->line[linechar];
+			cur->line[linechar] = ' ';
+		}
+		for(int j = i; j<WIDTH; j++){
+			newfileline->line[j] = ' ';
+		}
+		newfileline->next = cur->next;
+		newfileline->prev = cur;
+		if(cur->next != 0){
+			cur->next->prev = newfileline;
+		} else {
+			lastOnScreen = newfileline;
+		}
+		cur->next = newfileline;
+		newfileline->filelinenum = cur->filelinenum;
+		struct fileline* temp = newfileline;
+		while(temp != 0){
+			temp->filelinenum = temp->filelinenum + 1;
+			temp = temp->next;
+		}
+	} 
+	//enter was pressed in first column
+	else
+	{
+		struct fileline* newfileline = malloc(sizeof(struct fileline));
+		int i = 0;
+		for(i = 0; linechar<WIDTH; i++, linechar++){
+			newfileline->line[i] = ' ';
+		}
+		newfileline->next = cur;
+		newfileline->prev = cur->prev;
+		if(cur->prev != 0){
+			cur->prev->next = newfileline;
+		} else {
+			firstOnScreen = newfileline;
+		}
+		cur->prev = newfileline;
+		newfileline->filelinenum = cur->filelinenum;
+		struct fileline* temp = newfileline->next;
+		while(temp != 0){
+			temp->filelinenum = temp->filelinenum + 1;
+			temp = temp->next;
+		}
+		lastOnScreen = lastOnScreen->prev;
+	}
+	printfile(firstOnScreen);
+}
+
+void
 handleInput(int i) {
 	printf(1, "currChar: %d\n", currChar);
 	//ctrl+q
@@ -238,6 +301,11 @@ handleInput(int i) {
 	//ctrl+x
 	else if(i == 24){
 		cutline();
+	}
+
+	//return key
+	else if(i == 13){
+		newline();
 	}
 
 	//backspace
