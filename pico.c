@@ -57,7 +57,7 @@ initLinkedList(int fd)
 			linenumber++;
 		}
 	}
-	//printf(1, "%s", head->line);
+	firstOnScreen = head;
 	// cur = head;
 	// while(cur->next != 0){
 	// 	printf(1, "%s", cur->line);
@@ -68,9 +68,9 @@ initLinkedList(int fd)
 }
 
 void
-initialprintfile(int fd)
+printfile(struct fileline* first)
 {
-	struct fileline* cur = head;
+	struct fileline* cur = first;
 	int bufindex = 0;
 	while(cur->next != 0 && bufindex < TOTAL_CHARS - WIDTH){
 		for(int i=0; i<WIDTH; i++){
@@ -84,14 +84,18 @@ initialprintfile(int fd)
 		cur = cur->next;
 	}
 	for(int i=0; i<WIDTH; i++){
-			buf[bufindex] = cur->line[i];
+			if(cur->line[i] == '\0'){
+				buf[bufindex] = ' ';
+			} else{
+				buf[bufindex] = cur->line[i];
+			}
 			bufindex++;
 	}
+	lastOnScreen = cur;
 
 	buf[bufindex] = '\0';
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
-	close(fd);
 }
 
 void
@@ -106,6 +110,45 @@ drawFooter() {
 	updatesc(0, 24, " ^Q - Quit                                                                      ", UI_COLOR);
 }
 
+
+void
+arrowkeys(int i){
+	//ctrl+j (go left)
+	if(i == 10 && (currChar % WIDTH != 0) && currChar > 0){
+		currChar--;
+	}
+	//ctrl+l (go right)
+	else if(i==12 && ((currChar+1) % WIDTH != 0)){
+		currChar++;
+	}
+	//ctrl+k (go down)
+	else if(i == 11){
+		if(currChar < TOTAL_CHARS - WIDTH){
+			currChar += WIDTH;
+		}
+		else{
+			//scroll down
+			if(lastOnScreen->next != 0){
+				printfile(firstOnScreen->next);
+				firstOnScreen = firstOnScreen->next;
+			}
+		}
+	}
+	//ctrl+i (go up)
+	else if(i == 9){
+		if(currChar >= WIDTH){
+			currChar -= WIDTH;
+		}
+		else{
+			//scroll up
+			if(firstOnScreen->prev != 0){
+				printfile(firstOnScreen->prev);
+				firstOnScreen = firstOnScreen->prev;
+			}
+		}
+	}
+}
+
 void
 handleInput(int i) {
 	//ctrl+q
@@ -114,22 +157,7 @@ handleInput(int i) {
 	}
 	printf(1, "currChar: %d\n", currChar);
 	if(i >= 9 && i<= 12){
-		//ctrl+j (go left)
-		if(i == 10 && (currChar % WIDTH != 0) && currChar > 0){
-			currChar--;
-		}
-		//ctrl+l (go right)
-		else if(i==12 && ((currChar+1) % WIDTH != 0)){
-			currChar++;
-		}
-		//ctrl+k (go down)
-		else if(i == 11 && currChar < TOTAL_CHARS - WIDTH){
-			currChar += WIDTH;
-		}
-		//ctrl+i (go up)
-		else if(i == 9 && currChar >= WIDTH){
-			currChar -= WIDTH;
-		}
+		arrowkeys(i);
 	}
 	//On right edge of window 
 	else if((currChar+1) % WIDTH == 0){
@@ -155,9 +183,7 @@ main(int argc, char *argv[]) {
 			printf(1, "Cannot open %s\n", argv[1]);
 		} else {
 			initLinkedList(fd);
-			close(fd);
-			fd = open(argv[1], 0);
-			initialprintfile(fd);
+			printfile(head);
 		}
 	} else {
 		printf(1, "No file selected");
