@@ -54,7 +54,6 @@ initLinkedList(int fd)
 			linecounter = 0;
 			cur->line[linecounter] = singlechar[0];
 			linecounter++;
-			printf(1, "linenumber %d\n", linenumber);
 			linenumber++;
 		}
 	}
