@@ -139,6 +139,27 @@ static ushort crtbackup[2000]; // array of size 25 * 80
  * so only that pid can modify the screen.
  * Also clears the screen.
  */
+
+void vga_move_forward_cursor(){
+  int pos;
+  
+  // get cursor position
+  outb(CRTPORT, 14);                  
+  pos = inb(CRTPORT+1) << 8;
+  outb(CRTPORT, 15);
+  pos |= inb(CRTPORT+1);    
+
+  // move back
+  pos++;
+
+  // reset cursor
+  outb(CRTPORT, 15);
+  outb(CRTPORT+1, (unsigned char)(pos&0xFF));
+  outb(CRTPORT, 14);
+  outb(CRTPORT+1, (unsigned char )((pos>>8)&0xFF));
+  //crt[pos] = ' ' | 0x0700;
+}
+
 int
 capturescreen(int pid, void* handler_voidptr) {
   acquire(&cons.lock);
@@ -181,6 +202,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   char c;
   int i;
   for(i = 0; (c = content[i]) != 0; i++) {
+    //vga_move_forward_cursor();
     // crt[initialpos+i] = (color<<8) || c;
     //Don't print out newline character, print out a space instead
     if(c == '\n'){
@@ -211,8 +233,9 @@ cgaputc(int c)
     pos += 80 - pos%80;
   else if(c == BACKSPACE){
     if(pos > 0) --pos;
-  } else
+  } else{
     crt[pos++] = (c&0xff) | 0x0700;  // black on white
+  }
 
   if(pos < 0 || pos > 25*80)
     panic("pos under/overflow");
@@ -222,7 +245,6 @@ cgaputc(int c)
     pos -= 80;
     memset(crt+pos, 0, sizeof(crt[0])*(24*80 - pos));
   }
-
   outb(CRTPORT, 14);
   outb(CRTPORT+1, pos>>8);
   outb(CRTPORT, 15);

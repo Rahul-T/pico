@@ -54,6 +54,7 @@ initLinkedList(int fd)
 			linecounter = 0;
 			cur->line[linecounter] = singlechar[0];
 			linecounter++;
+			printf(1, "linenumber %d\n", linenumber);
 			linenumber++;
 		}
 	}
@@ -110,6 +111,33 @@ drawFooter() {
 	updatesc(0, 24, " ^Q - Quit                                                                      ", UI_COLOR);
 }
 
+void
+saveedits(void){
+	//Save edits
+	struct fileline* cur = firstOnScreen;
+	int bufindex = 0;
+	while(cur != lastOnScreen->next){
+		for(int i=0; i<WIDTH; i++){
+			cur->line[i] = buf[bufindex];
+			bufindex++;
+		}
+		cur = cur->next;
+	}
+}
+
+void
+scrolldown(void){
+	saveedits();
+	printfile(firstOnScreen->next);
+	firstOnScreen = firstOnScreen->next;
+}
+
+void
+scrollup(void){
+	saveedits();
+	printfile(firstOnScreen->prev);
+	firstOnScreen = firstOnScreen->prev;
+}
 
 void
 arrowkeys(int i){
@@ -127,11 +155,8 @@ arrowkeys(int i){
 			currChar += WIDTH;
 		}
 		else{
-			//scroll down
-			if(lastOnScreen->next != 0){
-				printfile(firstOnScreen->next);
-				firstOnScreen = firstOnScreen->next;
-			}
+			if(lastOnScreen->next != 0)
+				scrolldown();
 		}
 	}
 	//ctrl+i (go up)
@@ -140,11 +165,8 @@ arrowkeys(int i){
 			currChar -= WIDTH;
 		}
 		else{
-			//scroll up
-			if(firstOnScreen->prev != 0){
-				printfile(firstOnScreen->prev);
-				firstOnScreen = firstOnScreen->prev;
-			}
+			if(firstOnScreen->prev != 0)
+				scrollup();
 		}
 	}
 }
@@ -158,6 +180,10 @@ handleInput(int i) {
 	printf(1, "currChar: %d\n", currChar);
 	if(i >= 9 && i<= 12){
 		arrowkeys(i);
+	}
+	//backspace
+	else if(i == 127){
+
 	}
 	//On right edge of window 
 	else if((currChar+1) % WIDTH == 0){
