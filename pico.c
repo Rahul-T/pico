@@ -26,7 +26,7 @@ struct fileline{
 struct fileline* head;
 struct fileline* firstOnScreen;
 struct fileline* lastOnScreen;
-struct fileline* tail;
+//struct fileline* tail;
 
 void
 initLinkedList(int fd)
@@ -60,10 +60,38 @@ initLinkedList(int fd)
 			linenumber++;
 		}
 	}
-	cur->filelinenum = linenumber;
 
+	cur->filelinenum = linenumber;
+	linenumber++;
 	firstOnScreen = head;
-	tail = cur;
+
+	struct fileline* temp;
+
+	if(linenumber < 23){
+		temp = malloc(sizeof(struct fileline));
+		cur->next = temp;
+		temp->prev = cur;
+	}
+	linecounter = 0;
+	while(linenumber < 23){
+		if(linecounter < WIDTH){
+			temp->line[linecounter] = ' ';
+			linecounter++;
+		}
+		else {
+			struct fileline* nextline = malloc(sizeof(struct fileline));
+			temp->filelinenum = linenumber;
+			nextline->prev = temp;
+			temp->next = nextline;
+			temp = nextline;
+			linecounter = 0;
+			temp->line[linecounter] = ' ';
+			linecounter++;
+			// int nmbr = (int)(cur->filelinenum);
+			// printf(1, "linenum: %d\n", nmbr);
+			linenumber++;
+		}
+	}
 	// cur = head;
 	// while(cur->next != 0){
 	// 	printf(1, "%s", cur->line);
@@ -99,11 +127,8 @@ printfile(struct fileline* first)
 	}
 	lastOnScreen = cur;
 
-	while(bufindex < TOTAL_CHARS){
-		buf[bufindex] = ' ';
-	}
-
 	buf[bufindex] = '\0';
+	printf(1, "asdfasdfdsf: %d", lastOnScreen->filelinenum);
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
 }
