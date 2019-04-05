@@ -724,7 +724,7 @@ cgaputc(int c)
 {
   int pos;
 
-  if (screencaptured)
+  if (screencaptured){
 80100422:	8b 15 f8 b4 10 80    	mov    0x8010b4f8,%edx
 80100428:	85 d2                	test   %edx,%edx
 8010042a:	0f 85 a8 00 00 00    	jne    801004d8 <consputc+0xe8>
@@ -748,6 +748,7 @@ inb(ushort port)
 80100442:	89 f2                	mov    %esi,%edx
 80100444:	ec                   	in     (%dx),%al
     return;
+  }
 
   // Cursor position: col + 80*row.
   outb(CRTPORT, 14);
@@ -1557,16 +1558,17 @@ updatescreen(int pid, int x, int y, char* content, int color) {
 80100933:	84 d2                	test   %dl,%dl
 80100935:	74 38                	je     8010096f <updatescreen+0x5f>
     // crt[initialpos+i] = (color<<8) || c;
+    //Don't print out newline character
     if(c != '\n')
       crt[initialpos + i] = (c&0xff) | (color<<8);
 80100937:	0f b7 7d 18          	movzwl 0x18(%ebp),%edi
 8010093b:	31 c0                	xor    %eax,%eax
 8010093d:	c1 e7 08             	shl    $0x8,%edi
-  int initialpos = x + 80*y;
   char c;
   int i;
   for(i = 0; (c = content[i]) != 0; i++) {
     // crt[initialpos+i] = (color<<8) || c;
+    //Don't print out newline character
     if(c != '\n')
 80100940:	80 fa 0a             	cmp    $0xa,%dl
 80100943:	74 0d                	je     80100952 <updatescreen+0x42>
@@ -1585,7 +1587,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
 80100955:	0f b6 14 06          	movzbl (%esi,%eax,1),%edx
 80100959:	84 d2                	test   %dl,%dl
 8010095b:	75 e3                	jne    80100940 <updatescreen+0x30>
-    // crt[initialpos+i] = (color<<8) || c;
+    //Don't print out newline character
     if(c != '\n')
       crt[initialpos + i] = (c&0xff) | (color<<8);
   }

@@ -17,6 +17,7 @@ int c = 0;
 
 
 struct fileline{
+	int filelinenum;
 	char line[80];
 	struct fileline* prev;
 	struct fileline* next;
@@ -34,6 +35,7 @@ initLinkedList(int fd)
 	head = malloc(sizeof(struct fileline));
 	struct fileline* cur = head;
 	int linecounter = 0;
+	int linenumber = 0;
 
 	while((n = read(fd, singlechar, 1)) > 0) {
 		if(linecounter < WIDTH){
@@ -45,12 +47,14 @@ initLinkedList(int fd)
 		}
 		else {
 			struct fileline* nextline = malloc(sizeof(struct fileline));
+			cur->filelinenum = linenumber;
 			nextline->prev = cur;
 			cur->next = nextline;
 			cur = nextline;
 			linecounter = 0;
 			cur->line[linecounter] = singlechar[0];
 			linecounter++;
+			linenumber++;
 		}
 	}
 	//printf(1, "%s", head->line);
@@ -85,7 +89,7 @@ initialprintfile(int fd)
 	}
 
 	buf[bufindex] = '\0';
-	printf(1, "%s\n", buf);
+	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
 	close(fd);
 }
@@ -104,12 +108,39 @@ drawFooter() {
 
 void
 handleInput(int i) {
+	//ctrl+q
 	if (i == 17) {
 		exit();
 	}
-	buf[currChar++] = (char) i & 0xff;
-	updatesc(0, 1, buf, TEXT_COLOR);
-	// printf(1, "new input");
+	printf(1, "currChar: %d\n", currChar);
+	if(i >= 9 && i<= 12){
+		//ctrl+j (go left)
+		if(i == 10 && (currChar % WIDTH != 0) && currChar > 0){
+			currChar--;
+		}
+		//ctrl+l (go right)
+		else if(i==12 && ((currChar+1) % WIDTH != 0)){
+			currChar++;
+		}
+		//ctrl+k (go down)
+		else if(i == 11 && currChar < TOTAL_CHARS - WIDTH){
+			currChar += WIDTH;
+		}
+		//ctrl+i (go up)
+		else if(i == 9 && currChar >= WIDTH){
+			currChar -= WIDTH;
+		}
+	}
+	//On right edge of window 
+	else if((currChar+1) % WIDTH == 0){
+		buf[currChar] = (char) i & 0xff;
+		updatesc(0, 1, buf, TEXT_COLOR);
+		// printf(1, "new input");
+	}
+	else{
+		buf[currChar++] = (char) i & 0xff;
+		updatesc(0, 1, buf, TEXT_COLOR);
+	}
 }
 
 int

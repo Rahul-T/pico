@@ -182,6 +182,7 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   int i;
   for(i = 0; (c = content[i]) != 0; i++) {
     // crt[initialpos+i] = (color<<8) || c;
+    //Don't print out newline character
     if(c != '\n')
       crt[initialpos + i] = (c&0xff) | (color<<8);
   }
@@ -193,8 +194,9 @@ cgaputc(int c)
 {
   int pos;
 
-  if (screencaptured)
+  if (screencaptured){
     return;
+  }
 
   // Cursor position: col + 80*row.
   outb(CRTPORT, 14);
