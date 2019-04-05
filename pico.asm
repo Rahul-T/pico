@@ -442,42 +442,50 @@ printfile(struct fileline* first)
  218:	83 c0 01             	add    $0x1,%eax
  21b:	83 f8 50             	cmp    $0x50,%eax
  21e:	75 e8                	jne    208 <printfile+0x78>
-	}
-	lastOnScreen = cur;
-
-	buf[bufindex] = '\0';
-	//printf(1, "%s\n", buf);
-	updatesc(0, 1, buf, TEXT_COLOR);
- 220:	6a 07                	push   $0x7
- 222:	68 c0 15 00 00       	push   $0x15c0
- 227:	6a 01                	push   $0x1
- 229:	6a 00                	push   $0x0
 			}
 			bufindex++;
 	}
 	lastOnScreen = cur;
 
-	buf[bufindex] = '\0';
- 22b:	c6 83 10 16 00 00 00 	movb   $0x0,0x1610(%ebx)
+	while(bufindex < TOTAL_CHARS){
+ 220:	81 fb e0 06 00 00    	cmp    $0x6e0,%ebx
 			} else{
 				buf[bufindex] = cur->line[i];
 			}
 			bufindex++;
 	}
 	lastOnScreen = cur;
- 232:	89 0d a4 15 00 00    	mov    %ecx,0x15a4
+ 226:	89 0d a4 15 00 00    	mov    %ecx,0x15a4
+
+	while(bufindex < TOTAL_CHARS){
+ 22c:	74 02                	je     230 <printfile+0xa0>
+ 22e:	eb fe                	jmp    22e <printfile+0x9e>
+		buf[bufindex] = ' ';
+	}
 
 	buf[bufindex] = '\0';
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
- 238:	e8 c5 09 00 00       	call   c02 <updatesc>
+ 230:	6a 07                	push   $0x7
+ 232:	68 c0 15 00 00       	push   $0x15c0
+ 237:	6a 01                	push   $0x1
+ 239:	6a 00                	push   $0x0
+
+	while(bufindex < TOTAL_CHARS){
+		buf[bufindex] = ' ';
+	}
+
+	buf[bufindex] = '\0';
+ 23b:	c6 05 f0 1c 00 00 00 	movb   $0x0,0x1cf0
+	//printf(1, "%s\n", buf);
+	updatesc(0, 1, buf, TEXT_COLOR);
+ 242:	e8 bb 09 00 00       	call   c02 <updatesc>
 }
- 23d:	83 c4 10             	add    $0x10,%esp
- 240:	8b 5d fc             	mov    -0x4(%ebp),%ebx
- 243:	c9                   	leave  
- 244:	c3                   	ret    
- 245:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
- 249:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
+ 247:	83 c4 10             	add    $0x10,%esp
+ 24a:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+ 24d:	c9                   	leave  
+ 24e:	c3                   	ret    
+ 24f:	90                   	nop
 
 00000250 <drawHeader>:
 

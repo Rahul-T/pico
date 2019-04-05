@@ -99,6 +99,10 @@ printfile(struct fileline* first)
 	}
 	lastOnScreen = cur;
 
+	while(bufindex < TOTAL_CHARS){
+		buf[bufindex] = ' ';
+	}
+
 	buf[bufindex] = '\0';
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
