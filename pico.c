@@ -26,6 +26,7 @@ struct fileline{
 struct fileline* head;
 struct fileline* firstOnScreen;
 struct fileline* lastOnScreen;
+struct fileline* tail;
 
 void
 initLinkedList(int fd)
@@ -54,16 +55,21 @@ initLinkedList(int fd)
 			linecounter = 0;
 			cur->line[linecounter] = singlechar[0];
 			linecounter++;
+			// int nmbr = (int)(cur->filelinenum);
+			// printf(1, "linenum: %d\n", nmbr);
 			linenumber++;
 		}
 	}
+	cur->filelinenum = linenumber;
+
 	firstOnScreen = head;
+	tail = cur;
 	// cur = head;
 	// while(cur->next != 0){
 	// 	printf(1, "%s", cur->line);
 	// 	cur = cur->next;
 	// }
-	// printf(1, "%s", cur->line);
+	// printf(1, "%s", tail->line);
 
 }
 
@@ -170,16 +176,70 @@ arrowkeys(int i){
 	}
 }
 
+
+void
+cutline(void){
+	int line = currChar/WIDTH;
+	struct fileline* cur = firstOnScreen;
+	for(int i=0; i<line; i++){
+		cur = cur->next;
+	}
+	if(lastOnScreen->next == 0){
+		if(firstOnScreen->prev != 0){
+			scrollup();
+		} else {
+			for(int i=0; i<WIDTH; i++){
+				cur->line[i] = ' ';
+			}
+			printfile(firstOnScreen);
+			return;
+		}
+	}
+	struct fileline* temp = cur;
+	while(temp != 0){
+		temp->filelinenum = temp->filelinenum-1;
+		temp = temp->next;
+	}
+	if(firstOnScreen == cur){
+		firstOnScreen = cur->next;
+	}
+	if(lastOnScreen == cur){
+		if(cur->next != 0){
+			lastOnScreen = cur->next;
+		} 
+		else if(cur->prev != 0){
+			lastOnScreen = cur->prev;
+		}
+	}
+	if(head == cur){
+		head = cur->next;
+	}
+	if(cur->prev != 0){
+		cur->prev->next = cur->next;
+	}
+	if(cur->next != 0){
+		cur->next->prev = cur->prev;
+	}
+	free(cur);
+	printfile(firstOnScreen);
+}
+
 void
 handleInput(int i) {
+	printf(1, "currChar: %d\n", currChar);
 	//ctrl+q
 	if (i == 17) {
 		exit();
 	}
-	printf(1, "currChar: %d\n", currChar);
-	if(i >= 9 && i<= 12){
+	else if(i >= 9 && i<= 12){
 		arrowkeys(i);
 	}
+
+	//ctrl+x
+	else if(i == 24){
+		cutline();
+	}
+
 	//backspace
 	else if(i == 127){
 		if(currChar > 0){
