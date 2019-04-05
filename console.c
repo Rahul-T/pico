@@ -182,7 +182,8 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   int i;
   for(i = 0; (c = content[i]) != 0; i++) {
     // crt[initialpos+i] = (color<<8) || c;
-    crt[initialpos + i] = (c&0xff) | (color<<8);
+    if(c != '\n')
+      crt[initialpos + i] = (c&0xff) | (color<<8);
   }
   return i;
 }

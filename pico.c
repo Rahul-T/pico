@@ -3,34 +3,90 @@
 #include "user.h"
 
 #define WIDTH 80
-#define HEIGHT 25
-#define TOTAL_CHARS 1920
+#define HEIGHT 23
+#define TOTAL_CHARS WIDTH * HEIGHT
 #define C(x)  ((x)-'@')  // Control-x
 
 #define UI_COLOR 0xc0
 #define TEXT_COLOR 0x07
 
-char buf[TOTAL_CHARS];
+char buf[TOTAL_CHARS + 1];
 int currChar = 0;
 int c = 0;
 // static int lastChar;
 
+
+struct fileline{
+	char line[80];
+	struct fileline* prev;
+	struct fileline* next;
+};
+
+struct fileline* head;
+struct fileline* firstOnScreen;
+struct fileline* lastOnScreen;
+
 void
-printfile(int fd)
+initLinkedList(int fd)
 {
 	int n;
+	char singlechar[1];
+	head = malloc(sizeof(struct fileline));
+	struct fileline* cur = head;
+	int linecounter = 0;
 
-	while((n = read(fd, buf, TOTAL_CHARS)) > 0) {
-		// if (write(1, buf, n) != n) {
-		// 	printf(1, "Write error\n");
-		// 	return;
-		// }
-		updatesc(0, 1, buf, TEXT_COLOR);
+	while((n = read(fd, singlechar, 1)) > 0) {
+		if(linecounter < WIDTH){
+			cur->line[linecounter] = singlechar[0];
+			linecounter++;
+			if(singlechar[0] == '\n'){
+				linecounter = WIDTH;
+			}
+		}
+		else {
+			struct fileline* nextline = malloc(sizeof(struct fileline));
+			nextline->prev = cur;
+			cur->next = nextline;
+			cur = nextline;
+			linecounter = 0;
+			cur->line[linecounter] = singlechar[0];
+			linecounter++;
+		}
 	}
-	if(n < 0){
-		printf(1, "Read error\n");
-		return;
+	//printf(1, "%s", head->line);
+	// cur = head;
+	// while(cur->next != 0){
+	// 	printf(1, "%s", cur->line);
+	// 	cur = cur->next;
+	// }
+	// printf(1, "%s", cur->line);
+
+}
+
+void
+initialprintfile(int fd)
+{
+	struct fileline* cur = head;
+	int bufindex = 0;
+	while(cur->next != 0 && bufindex < TOTAL_CHARS - WIDTH){
+		for(int i=0; i<WIDTH; i++){
+			if(cur->line[i] == '\0'){
+				buf[bufindex] = ' ';
+			} else{
+				buf[bufindex] = cur->line[i];
+			}
+			bufindex++;
+		}
+		cur = cur->next;
 	}
+	for(int i=0; i<WIDTH; i++){
+			buf[bufindex] = cur->line[i];
+			bufindex++;
+	}
+
+	buf[bufindex] = '\0';
+	printf(1, "%s\n", buf);
+	updatesc(0, 1, buf, TEXT_COLOR);
 	close(fd);
 }
 
@@ -67,7 +123,10 @@ main(int argc, char *argv[]) {
 		if((fd = open(argv[1], 0)) < 0){
 			printf(1, "Cannot open %s\n", argv[1]);
 		} else {
-			printfile(fd);
+			initLinkedList(fd);
+			close(fd);
+			fd = open(argv[1], 0);
+			initialprintfile(fd);
 		}
 	} else {
 		printf(1, "No file selected");
