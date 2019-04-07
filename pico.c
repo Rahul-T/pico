@@ -9,6 +9,7 @@
 
 #define UI_COLOR 0xc0
 #define TEXT_COLOR 0x07
+#define CURSOR_COLOR 0x70
 
 char buf[TOTAL_CHARS + 1];
 int currChar = 0;
@@ -174,6 +175,18 @@ scrollup(void){
 }
 
 void
+updateCursor(int prev, int curr) {
+	if (prev == curr)
+		return;
+	char firstUpdate[2];
+	firstUpdate[1] = 0;
+	firstUpdate[0] = buf[prev];
+	updatesc(prev, 1, firstUpdate, TEXT_COLOR);
+	firstUpdate[0] = buf[curr];
+	updatesc(curr, 1, firstUpdate, CURSOR_COLOR);
+}
+
+void
 arrowkeys(int i){
 	//ctrl+j (go left)
 	if((i == 10 || i == 228) && (currChar % WIDTH != 0) && currChar > 0){
@@ -318,6 +331,7 @@ newline(void)
 
 void
 handleInput(int i) {
+	int prevChar = currChar;
 	printf(1, "currChar: %d\n", currChar);
 	//ctrl+q
 	if (i == 17) {
@@ -360,6 +374,7 @@ handleInput(int i) {
 		buf[currChar++] = (char) i & 0xff;
 		updatesc(0, 1, buf, TEXT_COLOR);
 	}
+	updateCursor(prevChar, currChar);
 }
 
 int
