@@ -176,15 +176,15 @@ scrollup(void){
 void
 arrowkeys(int i){
 	//ctrl+j (go left)
-	if(i == 10 && (currChar % WIDTH != 0) && currChar > 0){
+	if((i == 10 || i == 228) && (currChar % WIDTH != 0) && currChar > 0){
 		currChar--;
 	}
 	//ctrl+l (go right)
-	else if(i==12 && ((currChar+1) % WIDTH != 0)){
+	else if((i==12 || i == 229) && ((currChar+1) % WIDTH != 0)){
 		currChar++;
 	}
 	//ctrl+k (go down)
-	else if(i == 11){
+	else if(i == 11 || i == 227){
 		if(currChar < TOTAL_CHARS - WIDTH){
 			currChar += WIDTH;
 		}
@@ -194,7 +194,7 @@ arrowkeys(int i){
 		}
 	}
 	//ctrl+i (go up)
-	else if(i == 9){
+	else if(i == 9 || i == 226){
 		if(currChar >= WIDTH){
 			currChar -= WIDTH;
 		}
@@ -323,7 +323,7 @@ handleInput(int i) {
 	if (i == 17) {
 		exit();
 	}
-	else if(i >= 9 && i<= 12){
+	else if((i >= 9 && i<= 12) || (i >= 226 && i <= 229)) {
 		arrowkeys(i);
 	}
 
