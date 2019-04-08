@@ -230,10 +230,7 @@ arrowkeys(int i){
 				scrollup();
 		}
 	}
-
-	printf(1, "currChar: %d\n", currChar);
 	leftaligncursor();
-	printf(1, "currChar: %d\n", currChar);
 }
 
 void
@@ -495,6 +492,7 @@ void insertchar(char c) {
 
 void
 handleInput(int i) {
+	printf(1, "currChar pre-handleInput: %d\n", currChar);
 	int prevChar = currChar;
 	//ctrl+q
 	if (i == 17) {
@@ -522,7 +520,8 @@ handleInput(int i) {
 		insertchar((char)i);
 	}
 	updateCursor(prevChar, currChar);
-			printlinenums();
+	printlinenums();
+	printf(1, "currChar post-handleInput: %d\n", currChar);
 }
 
 int
