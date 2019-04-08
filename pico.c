@@ -1,11 +1,11 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "console.h"
 
 #define WIDTH 80
 #define HEIGHT 23
 #define TOTAL_CHARS WIDTH * HEIGHT
-#define C(x)  ((x)-'@')  // Control-x
 
 #define UI_COLOR 0xc0
 #define TEXT_COLOR 0x07

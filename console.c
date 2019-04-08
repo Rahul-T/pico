@@ -14,6 +14,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
+#include "console.h"
 
 static void consputc(int);
 
@@ -214,6 +215,12 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   return i;
 }
 
+const uchar ansimap[256] = 
+{
+  ['A'] KEY_UP,     ['B'] KEY_DN,
+  ['C'] KEY_RT,     ['D'] KEY_LF,
+};
+
 static void
 cgaputc(int c)
 {
@@ -276,17 +283,29 @@ struct {
   uint e;  // Edit index
 } input;
 
-// C('A') == Control-A
-#define C(x) (x - '@')
 
 void
 consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
   
-
   if (screencaptured != 0) {
-    while((c = getc()) >= 0) {
+    static uint ansi;
+    while ((c = getc()) >= 0) {
+      if (c == 0x1B) {
+        ansi = 0x1B;
+        continue;
+      } else if (c == 0x5B && ansi == 0x1B) {
+        ansi = 0x5B;
+        continue;
+      } else if (ansi == 0x5B) {
+        ansi = 0;
+        buffer = ansimap[c];
+        return;
+      } else {
+        ansi = 0;
+      }
+
       buffer = c;
       cprintf("%d\n", c);
     }
