@@ -181,7 +181,6 @@ updateCursor(int prev, int curr) {
 // instead of looping to find it each time
 struct row* getcursorrow() {
 	int row = currChar/WIDTH;
-
 	struct row* cur = firstOnScreen;
 	for(int i=0; i<row; i++){
 		cur = cur->next;
@@ -193,7 +192,7 @@ struct row* getcursorrow() {
 void
 leftaligncursor(void){
 	struct row* currline = getcursorrow();
-	int row = currline->linenum;
+	int row = currChar/WIDTH;
 	int col = currline->linelen;
 	int lastvalidchar = row*WIDTH+col;
 	while(currChar > lastvalidchar){
@@ -232,7 +231,7 @@ arrowkeys(int i){
 		}
 	}
 
-	//printf(1, "currChar: %d\n", currChar);
+	printf(1, "currChar: %d\n", currChar);
 	leftaligncursor();
 	printf(1, "currChar: %d\n", currChar);
 }
