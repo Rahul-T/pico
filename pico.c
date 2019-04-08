@@ -11,106 +11,112 @@
 #define TEXT_COLOR 0x07
 #define CURSOR_COLOR 0x70
 
+#define BLANK_CHAR '.'
+
 char buf[TOTAL_CHARS + 1];
 int currChar = 0;
 int c = 0;
 // static int lastChar;
 
+// A row is the 80 characters displayed on the screen
+// A line is the group of characters between '\n' in a file - this can be longer than 80 characters
+// Since we don't want horizontal scrolling, there can be multiple rows per line
 
-struct fileline{
-	int filelinenum;
-	char line[80];
-	struct fileline* prev;
-	struct fileline* next;
+
+struct row {
+	int linenum;
+	int linelen;
+	char line[WIDTH];
+	struct row* prev;
+	struct row* next;
 };
 
-struct fileline* head;
-struct fileline* firstOnScreen;
-struct fileline* lastOnScreen;
-//struct fileline* tail;
+struct row* head;
+struct row* firstOnScreen;
+struct row* lastOnScreen;
+//struct row* tail;
 
 void
 initLinkedList(int fd)
 {
-	int n;
-	char singlechar[1];
-	head = malloc(sizeof(struct fileline));
-	struct fileline* cur = head;
-	int linecounter = 0;
-	int linenumber = 0;
+	head = malloc(sizeof(struct row));
+	struct row* cur = head;
+	cur->linenum = 0;
 
-	while((n = read(fd, singlechar, 1)) > 0) {
-		if(linecounter < WIDTH){
-			cur->line[linecounter] = singlechar[0];
-			linecounter++;
-			if(singlechar[0] == '\n'){
-				linecounter = WIDTH;
-			}
+	char c;
+	int column = 0;
+	int line = 0;
+	int row = 0;
+
+	// TODO(nussey): add error handling for file reading
+	while(read(fd, &c, 1) > 0) {
+
+		// Newline character
+		uint newline = 0;
+		if(c == '\n'){
+			line++;
+			cur->linelen = column;
+			newline = 1;
+		} else {
+			cur->line[column++] = c;
 		}
-		else {
-			struct fileline* nextline = malloc(sizeof(struct fileline));
-			cur->filelinenum = linenumber;
-			nextline->prev = cur;
-			cur->next = nextline;
-			cur = nextline;
-			linecounter = 0;
-			cur->line[linecounter] = singlechar[0];
-			linecounter++;
-			// int nmbr = (int)(cur->filelinenum);
-			// printf(1, "linenum: %d\n", nmbr);
-			linenumber++;
+
+		// If this row is part of a wrapping line, set its length to maximum
+		if(column >= WIDTH) {
+			cur->linelen = WIDTH;
+		}
+
+		if(column == WIDTH || newline) {
+			// Allocate a new row
+			struct row* nextrow = malloc(sizeof(struct row));
+			nextrow->linenum = line;
+
+			// Move linked list pointers
+			nextrow->prev = cur;
+			cur->next = nextrow;
+			cur = nextrow;
+
+			// Update counts
+			column = 0;
+			row++;
 		}
 	}
+	cur->linelen = column;
 
-	cur->filelinenum = linenumber;
-	linenumber++;
+	printf(1, "Read in %d lines to %d rows\n", line, row);
+
 	firstOnScreen = head;
 
-	struct fileline* temp;
+	// struct row* temp = malloc(sizeof(struct row));
+	// temp->linelen = -1;
+	// temp->linenum = -1;
+	// memset(temp->line, BLANK_CHAR, WIDTH);
 
-	if(linenumber < 23){
-		temp = malloc(sizeof(struct fileline));
-		cur->next = temp;
-		temp->prev = cur;
-	}
-	linecounter = 0;
-	while(linenumber < 23){
-		if(linecounter < WIDTH){
-			temp->line[linecounter] = ' ';
-			linecounter++;
-		}
-		else {
-			struct fileline* nextline = malloc(sizeof(struct fileline));
-			temp->filelinenum = linenumber;
-			nextline->prev = temp;
-			temp->next = nextline;
-			temp = nextline;
-			linecounter = 0;
-			temp->line[linecounter] = ' ';
-			linecounter++;
-			// int nmbr = (int)(cur->filelinenum);
-			// printf(1, "linenum: %d\n", nmbr);
-			linenumber++;
-		}
-	}
-	// cur = head;
-	// while(cur->next != 0){
-	// 	printf(1, "%s", cur->line);
-	// 	cur = cur->next;
-	// }
-	// printf(1, "%s", tail->line);
+	// Fill in enough rows to fill the screen
+	for(; row < HEIGHT; row++) {
+		printf(1, "Generated blank row\n");
 
+		// Negative length indicates a "fake" row
+		struct row* blank = malloc(sizeof(struct row));
+		blank->linelen = -1;
+		blank->linenum = -1;
+
+		// Update linked list
+		cur->next = blank;
+		blank->prev = cur;
+		cur = blank;
+	}
 }
 
 void
-printfile(struct fileline* first)
+printfile(struct row* first)
 {
-	struct fileline* cur = first;
+	struct row* cur = first;
 	int bufindex = 0;
 	while(cur->next != 0 && bufindex < TOTAL_CHARS - WIDTH){
 		for(int i=0; i<WIDTH; i++){
 			if(cur->line[i] == '\0'){
-				buf[bufindex] = ' ';
+				buf[bufindex] = BLANK_CHAR;
 			} else{
 				buf[bufindex] = cur->line[i];
 			}
@@ -120,7 +126,7 @@ printfile(struct fileline* first)
 	}
 	for(int i=0; i<WIDTH; i++){
 			if(cur->line[i] == '\0'){
-				buf[bufindex] = ' ';
+				buf[bufindex] = BLANK_CHAR;
 			} else{
 				buf[bufindex] = cur->line[i];
 			}
@@ -129,7 +135,7 @@ printfile(struct fileline* first)
 	lastOnScreen = cur;
 
 	buf[bufindex] = '\0';
-	printf(1, "asdfasdfdsf: %d", lastOnScreen->filelinenum);
+	printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
 }
@@ -147,29 +153,13 @@ drawFooter() {
 }
 
 void
-saveedits(void){
-	//Save edits
-	struct fileline* cur = firstOnScreen;
-	int bufindex = 0;
-	while(cur != lastOnScreen->next){
-		for(int i=0; i<WIDTH; i++){
-			cur->line[i] = buf[bufindex];
-			bufindex++;
-		}
-		cur = cur->next;
-	}
-}
-
-void
 scrolldown(void){
-	saveedits();
 	printfile(firstOnScreen->next);
 	firstOnScreen = firstOnScreen->next;
 }
 
 void
 scrollup(void){
-	saveedits();
 	printfile(firstOnScreen->prev);
 	firstOnScreen = firstOnScreen->prev;
 }
@@ -218,121 +208,279 @@ arrowkeys(int i){
 	}
 }
 
+// TODO(alex) it is probably better to just keep track of this
+// instead of looping to find it each time
+struct row* getcursorrow() {
+	int row = currChar/WIDTH;
 
-void
-cutline(void){
-	int line = currChar/WIDTH;
-	struct fileline* cur = firstOnScreen;
-	for(int i=0; i<line; i++){
+	struct row* cur = firstOnScreen;
+	for(int i=0; i<row; i++){
 		cur = cur->next;
 	}
-	if(lastOnScreen->next == 0){
-		if(firstOnScreen->prev != 0){
-			scrollup();
+
+	return cur;
+}
+
+void
+changelinenumbers(struct row* start, int amount) {
+	while(start != 0 && start->linenum >= 0) {
+		start->linenum += amount;
+		start = start->next;
+	}
+}
+
+struct row*
+insertnewrow(struct row* pred) {
+	struct row* new = malloc(sizeof(struct row));
+
+	new->next = pred->next;
+	new->prev = pred;
+
+	pred->next = new;
+
+	if(new->next != 0) {
+		new->next->prev = new;
+	}
+
+	return new;
+}
+
+struct row*
+removerow(struct row* row) {
+	struct row* next = row->next;
+	if(row->prev != 0) {
+		row->prev->next = row->next;
+	}
+	if(row->next != 0) {
+		row->next->prev = row->prev;
+	}
+
+	free(row);
+
+	return next;
+}
+
+void
+cutline(void) {
+	struct row* cur = getcursorrow();
+
+	// Find the first row with this line number
+	int linenum = cur->linenum;
+	while(cur->prev != 0 && cur->prev->linenum == linenum) {
+		cur = cur->prev;
+	}
+
+	while(cur != 0 && cur->linenum == linenum) {
+		cur = removerow(cur);
+	}
+
+	while(cur != 0) {
+		cur->linenum++;
+		cur = cur->next;
+	}
+
+	printfile(firstOnScreen);
+}
+
+// void
+// cutline(void){
+// 	struct row* cur = getcursorrow();
+// 	if(lastOnScreen->next == 0){
+// 		if(firstOnScreen->prev != 0){
+// 			scrollup();
+// 		} else {
+// 			for(int i=0; i<WIDTH; i++){
+// 				cur->line[i] = ' ';
+// 			}
+// 			printfile(firstOnScreen);
+// 			return;
+// 		}
+// 	}
+// 	struct row* temp = cur;
+// 	while(temp != 0){
+// 		temp->linenum = temp->linenum-1;
+// 		temp = temp->next;
+// 	}
+// 	if(firstOnScreen == cur){
+// 		firstOnScreen = cur->next;
+// 	}
+// 	if(lastOnScreen == cur){
+// 		if(cur->next != 0){
+// 			lastOnScreen = cur->next;
+// 		} 
+// 		else if(cur->prev != 0){
+// 			lastOnScreen = cur->prev;
+// 		}
+// 	}
+// 	if(head == cur){
+// 		head = cur->next;
+// 	}
+// 	if(cur->prev != 0){
+// 		cur->prev->next = cur->next;
+// 	}
+// 	if(cur->next != 0){
+// 		cur->next->prev = cur->prev;
+// 	}
+// 	free(cur);
+// 	printfile(firstOnScreen);
+// }
+
+void
+printlinenums(void)
+{
+	struct row* cur = firstOnScreen;
+	int row = 0;
+	while(cur != lastOnScreen) {
+		printf(1, "Row %d of len %d - line# %d\n", row, cur->linelen, cur->linenum);
+		row++;
+		cur = cur->next;
+	}
+
+	printf(1, "Row %d of len %d - line# %d\n", row, cur->linelen, cur->linenum);
+}
+
+void
+unwrapline(struct row* row) {
+	int linenum = row->linenum;
+
+	int freespace = WIDTH - row->linelen;
+	while(row->next->linenum == linenum) {
+		if(row->next->linelen <= freespace && row->next->linelen != WIDTH) {
+			memmove(row->line + row->linelen, row->next->line, row->next->linelen);
+			row->linelen = row->linelen + row->next->linelen;
+			memset(row->line + row->linelen, 0, WIDTH-row->linelen);
+			removerow(row->next);
 		} else {
-			for(int i=0; i<WIDTH; i++){
-				cur->line[i] = ' ';
-			}
-			printfile(firstOnScreen);
+			memmove(row->line + row->linelen, row->next->line, freespace);
+			memmove(row->next->line, row->next->line + freespace, WIDTH-freespace);
+			row->linelen = WIDTH;
+			row->next->linelen = row->next->linelen - freespace;
+			row = row->next;
+		}
+	}
+}
+
+void
+backspace(void) {
+	struct row* row = getcursorrow();
+	int column = currChar % WIDTH;
+
+	if(column > 0) {
+		memmove(row->line + column - 1, row->line + column, row->linelen - column + 1);
+		row->linelen--;
+		if(row->linelen >= WIDTH - 1) {
+			unwrapline(row);
+		}
+		// Move the cursor
+		currChar--;
+	} else {
+		if(row->prev == 0) {
 			return;
 		}
-	}
-	struct fileline* temp = cur;
-	while(temp != 0){
-		temp->filelinenum = temp->filelinenum-1;
-		temp = temp->next;
-	}
-	if(firstOnScreen == cur){
-		firstOnScreen = cur->next;
-	}
-	if(lastOnScreen == cur){
-		if(cur->next != 0){
-			lastOnScreen = cur->next;
-		} 
-		else if(cur->prev != 0){
-			lastOnScreen = cur->prev;
+
+		// The scrolling part here has a bug
+		if(row->prev->linenum == row->linenum) {
+			row->prev->linelen--;
+			unwrapline(row->prev);
+
+			if(row == firstOnScreen) {
+				scrolldown();
+			}
+			currChar--;
+		} else {
+			changelinenumbers(row, -1);
+			if(row->prev->linelen < WIDTH) {
+				unwrapline(row->prev);
+			}
+	
 		}
 	}
-	if(head == cur){
-		head = cur->next;
-	}
-	if(cur->prev != 0){
-		cur->prev->next = cur->next;
-	}
-	if(cur->next != 0){
-		cur->next->prev = cur->prev;
-	}
-	free(cur);
+
 	printfile(firstOnScreen);
 }
 
 void
 newline(void)
 {
-	saveedits();
-	int line = currChar/WIDTH;
-	struct fileline* cur = firstOnScreen;
-	for(int i=0; i<line; i++){
-		cur = cur->next;
+	struct row* row = getcursorrow();
+	int column = currChar % WIDTH;
+
+	struct row* nextrow = insertnewrow(row);
+	nextrow->linenum = row->linenum;
+
+	// Calculate new line lengths
+	nextrow->linelen = row->linelen - column;
+	row->linelen = column;
+
+	memmove(nextrow->line, row->line + row->linelen, nextrow->linelen);
+	memset(row->line + row->linelen, 0, nextrow->linelen);
+
+	if(nextrow->linelen != WIDTH) {
+		unwrapline(nextrow);
 	}
-	int linechar = currChar % WIDTH;
-	//enter pressed in any column except first
-	if(linechar != 0){
-		struct fileline* newfileline = malloc(sizeof(struct fileline));
-		int i = 0;
-		for(i = 0; linechar<WIDTH; i++, linechar++){
-			newfileline->line[i] = cur->line[linechar];
-			cur->line[linechar] = ' ';
-		}
-		for(int j = i; j<WIDTH; j++){
-			newfileline->line[j] = ' ';
-		}
-		newfileline->next = cur->next;
-		newfileline->prev = cur;
-		if(cur->next != 0){
-			cur->next->prev = newfileline;
-		} else {
-			lastOnScreen = newfileline;
-		}
-		cur->next = newfileline;
-		newfileline->filelinenum = cur->filelinenum;
-		struct fileline* temp = newfileline;
-		while(temp != 0){
-			temp->filelinenum = temp->filelinenum + 1;
-			temp = temp->next;
-		}
-	} 
-	//enter was pressed in first column
-	else
-	{
-		struct fileline* newfileline = malloc(sizeof(struct fileline));
-		int i = 0;
-		for(i = 0; linechar<WIDTH; i++, linechar++){
-			newfileline->line[i] = ' ';
-		}
-		newfileline->next = cur;
-		newfileline->prev = cur->prev;
-		if(cur->prev != 0){
-			cur->prev->next = newfileline;
-		} else {
-			firstOnScreen = newfileline;
-		}
-		cur->prev = newfileline;
-		newfileline->filelinenum = cur->filelinenum;
-		struct fileline* temp = newfileline->next;
-		while(temp != 0){
-			temp->filelinenum = temp->filelinenum + 1;
-			temp = temp->next;
-		}
-		lastOnScreen = lastOnScreen->prev;
+
+	while(nextrow != 0 && nextrow->linenum != -1) {
+		nextrow->linenum++;
+		nextrow = nextrow->next;
 	}
+
+	if(row == lastOnScreen) {
+		firstOnScreen = firstOnScreen->next;
+	} else {
+		currChar = (currChar/WIDTH + 1) * WIDTH;
+	}
+
+	printfile(firstOnScreen);
+	return;
+}
+
+void insertchar(char c) {
+	struct row* row = getcursorrow();
+	int column = currChar % WIDTH;
+
+	if (row->linelen == WIDTH) {
+
+		struct row* endrow = row;
+		while(endrow->next->linenum == row->linenum && endrow->linelen == WIDTH) {
+			endrow = endrow->next;
+		}
+
+		if(endrow->linelen == WIDTH) {
+			struct row* newrow = insertnewrow(endrow);
+			newrow->linelen = 0;
+			newrow->linenum = row->linenum;
+
+			endrow = newrow;
+		}
+
+		while(endrow != row) {
+			memmove(endrow->line + 1, endrow->line, endrow->linelen);
+			endrow->linelen++;
+			endrow->prev->linelen--;
+			endrow->line[0] = endrow->prev->line[WIDTH-1];
+
+			endrow = endrow->prev;
+		}
+
+	}
+
+	if(column < row->linelen) {
+		memmove(row->line + column + 1, row->line+column, row->linelen-column);
+		
+	} else if (column > row->linelen) {
+		printf(1, "NOT GOOD\n");
+	}
+
+	row->line[column] = c;
+	currChar++;
+	row->linelen++;
+
 	printfile(firstOnScreen);
 }
 
 void
 handleInput(int i) {
 	int prevChar = currChar;
-	printf(1, "currChar: %d\n", currChar);
 	//ctrl+q
 	if (i == 17) {
 		exit();
@@ -353,28 +501,13 @@ handleInput(int i) {
 
 	//backspace
 	else if(i == 127){
-		if(currChar > 0){
-			currChar--;
-			int bufindex = currChar;
-			while(((bufindex+1) % WIDTH) != 0){
-				buf[bufindex] = buf[bufindex+1];
-				bufindex++;
-			}
-			buf[bufindex] = ' ';
-			updatesc(0, 1, buf, TEXT_COLOR);
-		}
+		backspace();
 	}
-	//On right edge of window 
-	else if((currChar+1) % WIDTH == 0){
-		buf[currChar] = (char) i & 0xff;
-		updatesc(0, 1, buf, TEXT_COLOR);
-		// printf(1, "new input");
-	}
-	else{
-		buf[currChar++] = (char) i & 0xff;
-		updatesc(0, 1, buf, TEXT_COLOR);
+	else {
+		insertchar((char)i);
 	}
 	updateCursor(prevChar, currChar);
+			printlinenums();
 }
 
 int
