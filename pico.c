@@ -151,7 +151,7 @@ drawHeader() {
 
 void
 drawFooter() {
-	updatesc(0, 24, " ^Q - Quit                                                                      ", UI_COLOR);
+	updatesc(0, 24, " ^Q - Quit       ^X - Cutline                                                   ", UI_COLOR);
 }
 
 void
