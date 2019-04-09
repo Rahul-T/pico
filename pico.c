@@ -13,6 +13,8 @@
 
 #define BLANK_CHAR '.'
 
+#define NO_FILE 0
+
 char buf[TOTAL_CHARS + 1];
 int currChar = 0;
 int c = 0;
@@ -37,7 +39,7 @@ struct row* lastOnScreen;
 //struct row* tail;
 
 void
-initLinkedList(int fd)
+initLinkedList(int fd, int new_file)
 {
 	head = malloc(sizeof(struct row));
 	struct row* cur = head;
@@ -49,7 +51,7 @@ initLinkedList(int fd)
 	int row = 0;
 
 	// TODO(nussey): add error handling for file reading
-	while(read(fd, &c, 1) > 0) {
+	while(!new_file && read(fd, &c, 1) > 0) {
 
 		// Newline character
 		uint newline = 0;
@@ -211,7 +213,8 @@ arrowkeys(int i){
 		currChar++;
 	}
 	//ctrl+k (go down)
-	else if(i == 11 || i == 227){
+	//Second condition avoid the cursor to go down if there is not line written below (lepl3)
+	else if((i == 11 || i == 227) && !(getcursorrow()->next->linelen == -1)){
 		if(currChar < TOTAL_CHARS - WIDTH){
 			currChar += WIDTH;
 		}
@@ -492,28 +495,32 @@ void insertchar(char c) {
 
 void
 handleInput(int i) {
+	printf(1, "Key pressed: %d\n", i);
 	printf(1, "currChar pre-handleInput: %d\n", currChar);
 	int prevChar = currChar;
 	//ctrl+q
 	if (i == 17) {
 		exit();
 	}
-	else if((i >= 9 && i<= 12) || (i >= 226 && i <= 229)) {
+	// Change the arrow key bounds to work VM (lepl3)
+	else if((i >= 226 && i <= 229)) {
 		arrowkeys(i);
 	}
 
 	//ctrl+x
-	else if(i == 24){
+	else if(i == 24 || i == 23){
 		cutline();
 	}
 
 	//return key
-	else if(i == 13){
+	// Add 10 because of VM mapping (lepl3)
+	else if(i == 13 || i == 10){
 		newline();
 	}
 
-	//backspace
-	else if(i == 127){
+	//backspace 
+	// lepl3 in my VM backspace is equal to 8
+	else if(i == 127 || i == 8){
 		backspace();
 	}
 	else {
@@ -535,10 +542,11 @@ main(int argc, char *argv[]) {
 		if((fd = open(argv[1], 0)) < 0){
 			printf(1, "Cannot open %s\n", argv[1]);
 		} else {
-			initLinkedList(fd);
+			initLinkedList(fd, 0);
 			printfile(head);
 		}
 	} else {
+		initLinkedList(NO_FILE, 1);
 		printf(1, "No file selected");
 	}
 	while(1) {
