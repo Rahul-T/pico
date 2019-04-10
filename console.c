@@ -215,19 +215,29 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   char c;
   int i;
   int newcolor = color;
+  int startstring = 0;
   for(i = 0; (c = content[i]) != 0; i++) {
     //vga_move_forward_cursor();
     // crt[initialpos+i] = (color<<8) || c;
     //Don't print out newline character, print out a space instead
     if(c == '\n'){
       c = ' ';
-    } else if(c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
-              || c == '5' || c == '6' || c == '7' || c == '8' || c == '9'){
+    } else if(c == '\"' && startstring == 0){
+      newcolor = ORANGE;
+      startstring = 1;
+    } else if(c == '\"' && startstring == 1){
+      newcolor = color;
+      startstring = 0;
+    } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
+              || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
+              && startstring == 0){
       newcolor = PURPLE;
+    } 
+    else if(startstring == 0){
+      newcolor = color;
     }
     
     crt[initialpos + i] = (c&0xff) | (newcolor<<8);
-    newcolor = color;
   }
   return i;
 }
