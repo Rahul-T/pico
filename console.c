@@ -27,7 +27,7 @@
 #define DARK_GREY 0x08
 #define BLUE 0x09
 #define CURSOR_COLOR 0x70
-
+#define UI_COLOR 0xc0
 
 struct charandcolor {
   char character;
@@ -226,7 +226,7 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
     //vga_move_forward_cursor();
     // crt[initialpos+i] = (color<<8) || c;
     //Don't print out newline character, print out a space instead
-    if(color != CURSOR_COLOR){
+    if(color != CURSOR_COLOR && color != UI_COLOR){
       if(c == '\"' && startstring == 0){
         newcolor = ORANGE;
         startstring = 1;

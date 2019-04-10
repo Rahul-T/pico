@@ -150,14 +150,36 @@ printfile(struct row* first)
 
 void
 drawHeader() {
-	//updatesc(0, 0, "                              ", UI_COLOR);
-	//updatesc(30, 0, "        PICO        ", UI_COLOR);
-	//updatesc(50, 0, "                         v0.1 ", UI_COLOR);
+	char header1string[30] = "                              ";
+	struct charandcolor header1[30];
+	for(int i=0; i<30; i++){
+		header1[i].character = header1string[i];
+	}
+	updatesc(0, 0, header1, UI_COLOR);
+
+	char header2string[20] = "        PICO        ";
+	struct charandcolor header2[20];
+	for(int i=0; i<20; i++){
+		header2[i].character = header2string[i];
+	}
+	updatesc(30, 0, header2, UI_COLOR);
+
+	char header3string[30] = "                         v0.1 ";
+	struct charandcolor header3[30];
+	for(int i=0; i<30; i++){
+		header3[i].character = header3string[i];
+	}
+	updatesc(50, 0, header3, UI_COLOR);
 }
 
 void
 drawFooter() {
-	//updatesc(0, 24, " ^Q - Quit       ^X - Cutline                                                   ", UI_COLOR);
+	char footerstring[80] = " ^Q - Quit       ^X - Cutline                                                   ";
+	struct charandcolor footer[80];
+	for(int i=0; i<80; i++){
+		footer[i].character = footerstring[i];
+	}
+	updatesc(0, 24, footer, UI_COLOR);
 }
 
 void
