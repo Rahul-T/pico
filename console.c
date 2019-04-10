@@ -28,6 +28,7 @@
 #define BLUE 0x09
 #define CURSOR_COLOR 0x70
 #define UI_COLOR 0xc0
+#define TOTAL_CHARS WIDTH * HEIGHT
 
 struct charandcolor {
   char character;
@@ -159,26 +160,6 @@ static ushort crtbackup[2000]; // array of size 25 * 80
  * Also clears the screen.
  */
 
-void vga_move_forward_cursor(){
-  int pos;
-  
-  // get cursor position
-  outb(CRTPORT, 14);                  
-  pos = inb(CRTPORT+1) << 8;
-  outb(CRTPORT, 15);
-  pos |= inb(CRTPORT+1);    
-
-  // move back
-  pos++;
-
-  // reset cursor
-  outb(CRTPORT, 15);
-  outb(CRTPORT+1, (unsigned char)(pos&0xFF));
-  outb(CRTPORT, 14);
-  outb(CRTPORT+1, (unsigned char )((pos>>8)&0xFF));
-  //crt[pos] = ' ' | 0x0700;
-}
-
 int
 capturescreen(int pid, void* handler_voidptr) {
   acquire(&cons.lock);
@@ -222,11 +203,12 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
   int i;
   int newcolor = color;
   int startstring = 0;
+  int inword = 0;
+
   for(i = 0; (c = content[i].character) != 0; i++) {
-    //vga_move_forward_cursor();
-    // crt[initialpos+i] = (color<<8) || c;
-    //Don't print out newline character, print out a space instead
+
     if(color != CURSOR_COLOR && color != UI_COLOR){
+      //Strings are orange
       if(c == '\"' && startstring == 0){
         newcolor = ORANGE;
         startstring = 1;
@@ -236,14 +218,34 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
       } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
                 || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
                 && startstring == 0){
+        //Numbers are purple
         newcolor = PURPLE;
-      } 
-      else if(startstring == 0){
+      } else if(c == 'a' && startstring == 0){
+        char autostring[6] = " auto ";
+        for(int j=0; j<6; j++){
+          int k = i-1;
+          if(k+j >= 0){
+            if(content[k+j].character != autostring[j] && !(autostring[j] == ' ' && content[k+j].character == '.')){
+              inword = 0;
+              newcolor = color;
+              break;
+            }
+          }
+          inword = 4;
+          newcolor = BLUE;
+        }
+      }
+      else if(startstring == 0 && inword == 0){
         newcolor = color;
       }
       content[i].color = newcolor;
       }
+
+    if(inword > 0){
+      inword--;
+    }
     crt[initialpos + i] = (c&0xff) | (newcolor<<8);
+
   }
   return i;
 }
@@ -340,7 +342,7 @@ consoleintr(int (*getc)(void))
       }
 
       buffer = c;
-      cprintf("%d\n", c);
+      //cprintf("%d\n", c);
     }
     return;
   }

@@ -91,7 +91,7 @@ initLinkedList(int fd, int new_file)
 	}
 	cur->linelen = column;
 
-	printf(1, "Read in %d lines to %d rows\n", line, row);
+	//printf(1, "Read in %d lines to %d rows\n", line, row);
 
 	firstOnScreen = head;
 
@@ -143,7 +143,7 @@ printfile(struct row* first)
 	lastOnScreen = cur;
 
 	buf[bufindex].character = '\0';
-	printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
+	//printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
 }
@@ -523,8 +523,8 @@ void insertchar(char c) {
 
 void
 handleInput(int i) {
-	printf(1, "Key pressed: %d\n", i);
-	printf(1, "currChar pre-handleInput: %d\n", currChar);
+	//printf(1, "Key pressed: %d\n", i);
+	//printf(1, "currChar pre-handleInput: %d\n", currChar);
 	int prevChar = currChar;
 	//ctrl+q
 	if (i == 17) {
@@ -556,7 +556,7 @@ handleInput(int i) {
 	}
 	updateCursor(prevChar, currChar);
 	printlinenums();
-	printf(1, "currChar post-handleInput: %d\n", currChar);
+	//printf(1, "currChar post-handleInput: %d\n", currChar);
 }
 
 int
