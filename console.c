@@ -296,12 +296,15 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
     if(color != CURSOR_COLOR && color != UI_COLOR){
       //Strings are orange
       if(c == '\"' && startstring == 0 && startcomment == 0){
+        //Indicate start of string
         newcolor = ORANGE;
         startstring = 1;
       } else if(c == '\"' && startstring == 1 && startcomment == 0){
+        //Indicate end of string
         newcolor = ORANGE;
         startstring = 0;
       } else if(c == '/' && content[i+1].character == '/'){
+        //Comments are dark grey
         startcomment = 1;
         newcolor = DARK_GREY;
       } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
@@ -310,10 +313,12 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
         //Numbers are purple
         newcolor = PURPLE;
        } else if(startstring == 0 && inword == 0 && startcomment == 0){
+          //Type keywords are blue
           inword = checkallbluekeywords(content, i);
           if(inword > 0){
             newcolor = BLUE;
           } else {
+              //Other reserved words are red
               inword = checkallredkeywords(content, i);
               if(inword > 0){
                 newcolor = RED;
