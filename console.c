@@ -29,11 +29,18 @@
 #define CURSOR_COLOR 0x70
 #define UI_COLOR 0xc0
 #define TOTAL_CHARS WIDTH * HEIGHT
+#define NUM_BLUE_KEYWORDS 14
+#define NUM_RED_KEYWORDS 18
+
 
 struct charandcolor {
   char character;
   int color;
 };
+
+
+char *bluekeywords[NUM_BLUE_KEYWORDS];
+char *redkeywords[NUM_RED_KEYWORDS];
 
 static void consputc(int);
 
@@ -193,11 +200,89 @@ freescreen(int pid) {
   release(&cons.lock);
   return -1;
 }
+
+
+int
+checkkeyword(char keywordstring[], int keywordlen, struct charandcolor* content, int i){
+  for(int j=0; j<keywordlen; j++){
+    int k = i-1;
+    if(k+j >= 0){
+      if(content[k+j].character != keywordstring[j] && !(keywordstring[j] == ' ' && content[k+j].character == '.')){
+        return 0;
+      }
+    }
+  }
+  //cprintf("hey");
+  return 1;
+}
+
+int checkallbluekeywords(struct charandcolor* content, int i){
+  for(int k=0; k<NUM_BLUE_KEYWORDS; k++){
+    int len = 0;
+    for(int j=0; bluekeywords[k][j] != 0; j++){
+      len++;
+    }
+    if(checkkeyword(bluekeywords[k], len, content, i) == 1){
+      return len-2;
+    }
+  }
+  return 0;
+}
+
+int checkallredkeywords(struct charandcolor* content, int i){
+  for(int k=0; k<NUM_RED_KEYWORDS; k++){
+    int len = 0;
+    for(int j=0; redkeywords[k][j] != 0; j++){
+      len++;
+    }
+    if(checkkeyword(redkeywords[k], len, content, i) == 1){
+      return len-2;
+    }
+  }
+  return 0;
+}
+
+
 int
 updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
   if (pid != screencaptured) {
     return -1;
   }
+  bluekeywords[0] = " auto ";
+  bluekeywords[1] = " char ";
+  bluekeywords[2] = " double ";
+  bluekeywords[3] = " enum ";
+  bluekeywords[4] = " float ";
+  bluekeywords[5] = " int ";
+  bluekeywords[6] = " long ";
+  bluekeywords[7] = " short ";
+  bluekeywords[8] = " signed ";
+  bluekeywords[9] = " struct ";
+  bluekeywords[10] = " typedef ";
+  bluekeywords[11] = " union ";
+  bluekeywords[12] = " unsigned ";
+  bluekeywords[13] = " void ";
+
+  redkeywords[0] = " break ";
+  redkeywords[1] = " case ";
+  redkeywords[2] = " const ";
+  redkeywords[3] = " continue ";
+  redkeywords[4] = " default ";
+  redkeywords[5] = " do ";
+  redkeywords[6] = " else ";
+  redkeywords[7] = " extern ";
+  redkeywords[8] = " for ";
+  redkeywords[9] = " goto ";
+  redkeywords[10] = " if ";
+  redkeywords[11] = " register ";
+  redkeywords[12] = " return ";
+  redkeywords[13] = " sizeof ";
+  redkeywords[14] = " static ";
+  redkeywords[15] = " switch ";
+  redkeywords[16] = " volatile ";
+  redkeywords[17] = " while ";
+
+
   int initialpos = x + 80*y;
   char c;
   int i;
@@ -220,24 +305,20 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
                 && startstring == 0){
         //Numbers are purple
         newcolor = PURPLE;
-      } else if(c == 'a' && startstring == 0){
-        char autostring[6] = " auto ";
-        for(int j=0; j<6; j++){
-          int k = i-1;
-          if(k+j >= 0){
-            if(content[k+j].character != autostring[j] && !(autostring[j] == ' ' && content[k+j].character == '.')){
-              inword = 0;
-              newcolor = color;
-              break;
+       } else if(startstring == 0 && inword == 0){
+          inword = checkallbluekeywords(content, i);
+          if(inword > 0){
+            newcolor = BLUE;
+          } else {
+              inword = checkallredkeywords(content, i);
+              if(inword > 0){
+                newcolor = RED;
+              } else{
+                newcolor = color;
+              }
             }
-          }
-          inword = 4;
-          newcolor = BLUE;
-        }
-      }
-      else if(startstring == 0 && inword == 0){
-        newcolor = color;
-      }
+       }
+       
       content[i].color = newcolor;
       }
 
