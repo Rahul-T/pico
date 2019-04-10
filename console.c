@@ -16,6 +16,18 @@
 #include "x86.h"
 #include "console.h"
 
+#define BLACK 0x00
+#define DARK_BLUE 0x01
+#define GREEN 0x02
+#define TEAL 0x03
+#define RED 0x04
+#define PURPLE 0x05
+#define ORANGE 0x06
+#define GREY 0x07
+#define DARK_GREY 0x08
+#define BLUE 0x09
+
+
 static void consputc(int);
 
 static int panicked = 0;
@@ -202,15 +214,20 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   int initialpos = x + 80*y;
   char c;
   int i;
+  int newcolor = color;
   for(i = 0; (c = content[i]) != 0; i++) {
     //vga_move_forward_cursor();
     // crt[initialpos+i] = (color<<8) || c;
     //Don't print out newline character, print out a space instead
     if(c == '\n'){
       c = ' ';
+    } else if(c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
+              || c == '5' || c == '6' || c == '7' || c == '8' || c == '9'){
+      newcolor = PURPLE;
     }
     
-    crt[initialpos + i] = (c&0xff) | (color<<8);
+    crt[initialpos + i] = (c&0xff) | (newcolor<<8);
+    newcolor = color;
   }
   return i;
 }
