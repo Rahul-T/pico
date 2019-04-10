@@ -26,7 +26,13 @@
 #define GREY 0x07
 #define DARK_GREY 0x08
 #define BLUE 0x09
+#define CURSOR_COLOR 0x70
 
+
+struct charandcolor {
+  char character;
+  int color;
+};
 
 static void consputc(int);
 
@@ -207,7 +213,7 @@ freescreen(int pid) {
   return -1;
 }
 int
-updatescreen(int pid, int x, int y, char* content, int color) {
+updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
   if (pid != screencaptured) {
     return -1;
   }
@@ -216,27 +222,27 @@ updatescreen(int pid, int x, int y, char* content, int color) {
   int i;
   int newcolor = color;
   int startstring = 0;
-  for(i = 0; (c = content[i]) != 0; i++) {
+  for(i = 0; (c = content[i].character) != 0; i++) {
     //vga_move_forward_cursor();
     // crt[initialpos+i] = (color<<8) || c;
     //Don't print out newline character, print out a space instead
-    if(c == '\n'){
-      c = ' ';
-    } else if(c == '\"' && startstring == 0){
-      newcolor = ORANGE;
-      startstring = 1;
-    } else if(c == '\"' && startstring == 1){
-      newcolor = color;
-      startstring = 0;
-    } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
-              || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
-              && startstring == 0){
-      newcolor = PURPLE;
-    } 
-    else if(startstring == 0){
-      newcolor = color;
-    }
-    
+    if(color != CURSOR_COLOR){
+      if(c == '\"' && startstring == 0){
+        newcolor = ORANGE;
+        startstring = 1;
+      } else if(c == '\"' && startstring == 1){
+        newcolor = ORANGE;
+        startstring = 0;
+      } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
+                || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
+                && startstring == 0){
+        newcolor = PURPLE;
+      } 
+      else if(startstring == 0){
+        newcolor = color;
+      }
+      content[i].color = newcolor;
+      }
     crt[initialpos + i] = (c&0xff) | (newcolor<<8);
   }
   return i;

@@ -108,7 +108,8 @@ sys_freesc(void)
 int
 sys_updatesc(void) {
   int x, y, color;
-  char* content;
+  //char* content;
+  struct charandcolor* content;
   if(argint(0, &x) < 0)
     return -1;
   if(argint(1, &y) < 0)

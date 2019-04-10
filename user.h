@@ -1,5 +1,6 @@
 struct stat;
 struct rtcdate;
+struct charandcolor;
 
 // system calls
 int fork(void);
@@ -41,5 +42,5 @@ int atoi(const char*);
 // text editor added
 int captsc(int*);
 int freesc(void);
-int updatesc(int, int, char*, int);
+int updatesc(int, int, struct charandcolor*, int);
 int getkey(void);

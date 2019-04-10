@@ -15,7 +15,6 @@
 
 #define NO_FILE 0
 
-char buf[TOTAL_CHARS + 1];
 int currChar = 0;
 int c = 0;
 // static int lastChar;
@@ -32,6 +31,13 @@ struct row {
 	struct row* prev;
 	struct row* next;
 };
+
+struct charandcolor {
+	char character;
+	int color;
+};
+
+struct charandcolor buf[TOTAL_CHARS + 1];
 
 struct row* head;
 struct row* firstOnScreen;
@@ -118,9 +124,9 @@ printfile(struct row* first)
 	while(cur->next != 0 && bufindex < TOTAL_CHARS - WIDTH){
 		for(int i=0; i<WIDTH; i++){
 			if(cur->line[i] == '\0'){
-				buf[bufindex] = BLANK_CHAR;
+				buf[bufindex].character = BLANK_CHAR;
 			} else{
-				buf[bufindex] = cur->line[i];
+				buf[bufindex].character = cur->line[i];
 			}
 			bufindex++;
 		}
@@ -128,15 +134,15 @@ printfile(struct row* first)
 	}
 	for(int i=0; i<WIDTH; i++){
 			if(cur->line[i] == '\0'){
-				buf[bufindex] = BLANK_CHAR;
+				buf[bufindex].character = BLANK_CHAR;
 			} else{
-				buf[bufindex] = cur->line[i];
+				buf[bufindex].character = cur->line[i];
 			}
 			bufindex++;
 	}
 	lastOnScreen = cur;
 
-	buf[bufindex] = '\0';
+	buf[bufindex].character = '\0';
 	printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
 	//printf(1, "%s\n", buf);
 	updatesc(0, 1, buf, TEXT_COLOR);
@@ -144,14 +150,14 @@ printfile(struct row* first)
 
 void
 drawHeader() {
-	updatesc(0, 0, "                              ", UI_COLOR);
-	updatesc(30, 0, "        PICO        ", UI_COLOR);
-	updatesc(50, 0, "                         v0.1 ", UI_COLOR);
+	//updatesc(0, 0, "                              ", UI_COLOR);
+	//updatesc(30, 0, "        PICO        ", UI_COLOR);
+	//updatesc(50, 0, "                         v0.1 ", UI_COLOR);
 }
 
 void
 drawFooter() {
-	updatesc(0, 24, " ^Q - Quit       ^X - Cutline                                                   ", UI_COLOR);
+	//updatesc(0, 24, " ^Q - Quit       ^X - Cutline                                                   ", UI_COLOR);
 }
 
 void
@@ -170,11 +176,11 @@ void
 updateCursor(int prev, int curr) {
 	if (prev == curr)
 		return;
-	char firstUpdate[2];
-	firstUpdate[1] = 0;
-	firstUpdate[0] = buf[prev];
-	updatesc(prev, 1, firstUpdate, TEXT_COLOR);
-	firstUpdate[0] = buf[curr];
+	struct charandcolor firstUpdate[2];
+	firstUpdate[1].character = 0;
+	firstUpdate[0].character = buf[prev].character;
+	updatesc(prev, 1, firstUpdate, buf[prev].color);
+	firstUpdate[0].character = buf[curr].character;
 	updatesc(curr, 1, firstUpdate, CURSOR_COLOR);
 }
 
@@ -346,12 +352,12 @@ printlinenums(void)
 	struct row* cur = firstOnScreen;
 	int row = 0;
 	while(cur != lastOnScreen) {
-		printf(1, "Row %d of len %d - line# %d\n", row, cur->linelen, cur->linenum);
+		//printf(1, "Row %d of len %d - line# %d\n", row, cur->linelen, cur->linenum);
 		row++;
 		cur = cur->next;
 	}
 
-	printf(1, "Row %d of len %d - line# %d\n", row, cur->linelen, cur->linenum);
+	//printf(1, "Row %d of len %d - line# %d\n", row, cur->linelen, cur->linenum);
 }
 
 void
