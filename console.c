@@ -26,6 +26,12 @@
 #define GREY 0x07
 #define DARK_GREY 0x08
 #define BLUE 0x09
+#define LIGHT_GREEN 0x0A
+#define LIGHT_BLUE 0x0B
+#define LIGHT_ORANGE 0x0C
+#define PINK 0x0D
+#define YELLOW 0x0E
+#define WHITE 0x0F
 #define CURSOR_COLOR 0x70
 #define UI_COLOR 0xc0
 #define TOTAL_CHARS WIDTH * HEIGHT
@@ -297,31 +303,31 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
       //Strings are orange
       if(c == '\"' && startstring == 0 && startcomment == 0){
         //Indicate start of string
-        newcolor = ORANGE;
+        newcolor = LIGHT_ORANGE;
         startstring = 1;
       } else if(c == '\"' && startstring == 1 && startcomment == 0){
         //Indicate end of string
-        newcolor = ORANGE;
+        newcolor = LIGHT_ORANGE;
         startstring = 0;
       } else if(c == '/' && content[i+1].character == '/'){
         //Comments are dark grey
         startcomment = 1;
-        newcolor = DARK_GREY;
+        newcolor = GREY;
       } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
                 || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
                 && startstring == 0 && startcomment == 0){
         //Numbers are purple
-        newcolor = PURPLE;
+        newcolor = PINK;
        } else if(startstring == 0 && inword == 0 && startcomment == 0){
           //Type keywords are blue
           inword = checkallbluekeywords(content, i);
           if(inword > 0){
-            newcolor = BLUE;
+            newcolor = LIGHT_BLUE;
           } else {
               //Other reserved words are red
               inword = checkallredkeywords(content, i);
               if(inword > 0){
-                newcolor = RED;
+                newcolor = LIGHT_GREEN;
               } else{
                 newcolor = color;
               }

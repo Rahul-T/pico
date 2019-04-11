@@ -8,7 +8,7 @@
 #define TOTAL_CHARS WIDTH * HEIGHT
 
 #define UI_COLOR 0xc0
-#define TEXT_COLOR 0x07
+#define TEXT_COLOR 0x0F
 #define CURSOR_COLOR 0x70
 
 #define BLANK_CHAR '.'
