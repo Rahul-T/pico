@@ -213,7 +213,9 @@ checkkeyword(char keywordstring[], int keywordlen, struct charandcolor* content,
   for(int j=0; j<keywordlen; j++){
     int k = i-1;
     if(k+j >= 0){
-      if(content[k+j].character != keywordstring[j] && !(keywordstring[j] == ' ' && content[k+j].character == '.')){
+      if(content[k+j].character != keywordstring[j] && !(keywordstring[j] == ' ' 
+          && (content[k+j].character == '.' || content[k+j].character == '(' 
+          || content[k+j].character == '{' || content[k+j].character == ';'))){
         return 0;
       }
     }
