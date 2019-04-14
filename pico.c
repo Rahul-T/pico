@@ -11,7 +11,7 @@
 #define TEXT_COLOR 0x0F
 #define CURSOR_COLOR 0x70
 
-#define BLANK_CHAR '.'
+#define BLANK_CHAR ' '
 
 #define NO_FILE 0
 
@@ -43,6 +43,8 @@ struct row* head;
 struct row* firstOnScreen;
 struct row* lastOnScreen;
 //struct row* tail;
+
+struct row* getcursorrow();
 
 void
 initLinkedList(int fd, int new_file)
@@ -102,8 +104,6 @@ initLinkedList(int fd, int new_file)
 
 	// Fill in enough rows to fill the screen
 	for(; row < HEIGHT; row++) {
-		printf(1, "Generated blank row\n");
-
 		// Negative length indicates a "fake" row
 		struct row* blank = malloc(sizeof(struct row));
 		blank->linelen = -1;
@@ -125,7 +125,10 @@ printfile(struct row* first)
 		for(int i=0; i<WIDTH; i++){
 			if(cur->line[i] == '\0'){
 				buf[bufindex].character = BLANK_CHAR;
-			} else{
+			} else if(cur->line[i] == 9){
+				// Tab character
+				buf[bufindex].character = 26;
+			} else {
 				buf[bufindex].character = cur->line[i];
 			}
 			bufindex++;
@@ -135,6 +138,9 @@ printfile(struct row* first)
 	for(int i=0; i<WIDTH; i++){
 			if(cur->line[i] == '\0'){
 				buf[bufindex].character = BLANK_CHAR;
+			} else if(cur->line[i] == 9){
+				// Tab character
+				buf[bufindex].character = 26;
 			} else{
 				buf[bufindex].character = cur->line[i];
 			}
@@ -179,6 +185,31 @@ drawFooter() {
 	for(int i=0; i<80; i++){
 		footer[i].character = footerstring[i];
 	}
+	char charsProc = 0;
+	// Draw column number
+	int currCharProc = currChar%WIDTH+1;
+	struct row* currRow = getcursorrow();
+	struct row* rowiter = currRow;
+	if (rowiter != 0) {
+		while (rowiter->prev != 0 && rowiter->prev->linenum == rowiter->linenum) {
+			currCharProc += WIDTH;
+			rowiter = rowiter->prev;
+		} 
+	}
+	do {
+		footer[78-charsProc++].character = 48 + currCharProc % 10;
+		currCharProc = currCharProc / 10;
+	} while (currCharProc > 0);
+	footer[78-charsProc++].character = 58;
+	// Draw line number 
+	currCharProc = currRow->linenum + 1;
+	if (currCharProc > 74000) {
+		currCharProc = 1;
+	}
+	do {
+		footer[78-charsProc++].character = 48 + currCharProc % 10;
+		currCharProc = currCharProc / 10;
+	} while (currCharProc > 0);
 	updatesc(0, 24, footer, UI_COLOR);
 }
 
@@ -196,8 +227,6 @@ scrollup(void){
 
 void
 updateCursor(int prev, int curr) {
-	if (prev == curr)
-		return;
 	struct charandcolor firstUpdate[2];
 	firstUpdate[1].character = 0;
 	firstUpdate[0].character = buf[prev].character;
@@ -554,7 +583,9 @@ handleInput(int i) {
 	else {
 		insertchar((char)i);
 	}
+	printf(1, "%d\n", i);
 	updateCursor(prevChar, currChar);
+	drawFooter();
 	printlinenums();
 	//printf(1, "currChar post-handleInput: %d\n", currChar);
 }
@@ -577,6 +608,7 @@ main(int argc, char *argv[]) {
 		initLinkedList(NO_FILE, 1);
 		printf(1, "No file selected");
 	}
+	updateCursor(0, 0);
 	while(1) {
 		while ((c = getkey()) <= 0) {
 		}

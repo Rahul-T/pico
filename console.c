@@ -55,7 +55,7 @@ static int screencaptured = 0;
 // typedef void (*handler_t)(int);
 // static handler_t handler;
 //int* handlechar = 0;
-int buffer;
+int buffer[3];
 
 static struct {
   struct spinlock lock;
@@ -437,13 +437,14 @@ consoleintr(int (*getc)(void))
         continue;
       } else if (ansi == 0x5B) {
         ansi = 0;
-        buffer = ansimap[c];
         return;
       } else {
         ansi = 0;
       }
 
-      buffer = c;
+      int i = 0;
+      for (; i<3 && buffer[i]!=0; i++);
+      buffer[i] = c;
       //cprintf("%d\n", c);
     }
     return;
@@ -559,7 +560,11 @@ readkey(int pid)
   if (pid != screencaptured)
     return -1;
 
-  int temp = buffer;
-  buffer = 0;
+  int temp = buffer[0];
+  if (temp != 0) {
+    buffer[0] = buffer[1];
+    buffer[1] = buffer[2];
+    buffer[2] = 0;
+  }
   return temp;
 }

@@ -1,5 +1,6 @@
-Hello this is a file
+#include <stdio.h>
 
-This line is too long to be displayed without wrapping over on to a new row in the text editor
-
-A very long file
+int main() {
+	printf("Hello World");
+	return 0;
+}
