@@ -438,7 +438,8 @@ consoleintr(int (*getc)(void))
       } else if (ansi == 0x5B) {
         int i = 0;
         for (; i<3 && buffer[i]!=0; i++);
-        buffer[0] = ansimap[c];
+        buffer[i] = ansimap[c];
+        ansi = 0;
         return;
       } else {
         ansi = 0;
