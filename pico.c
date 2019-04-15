@@ -354,49 +354,6 @@ cutline(void) {
 	printfile(firstOnScreen);
 }
 
-// void
-// cutline(void){
-// 	struct row* cur = getcursorrow();
-// 	if(lastOnScreen->next == 0){
-// 		if(firstOnScreen->prev != 0){
-// 			scrollup();
-// 		} else {
-// 			for(int i=0; i<WIDTH; i++){
-// 				cur->line[i] = ' ';
-// 			}
-// 			printfile(firstOnScreen);
-// 			return;
-// 		}
-// 	}
-// 	struct row* temp = cur;
-// 	while(temp != 0){
-// 		temp->linenum = temp->linenum-1;
-// 		temp = temp->next;
-// 	}
-// 	if(firstOnScreen == cur){
-// 		firstOnScreen = cur->next;
-// 	}
-// 	if(lastOnScreen == cur){
-// 		if(cur->next != 0){
-// 			lastOnScreen = cur->next;
-// 		} 
-// 		else if(cur->prev != 0){
-// 			lastOnScreen = cur->prev;
-// 		}
-// 	}
-// 	if(head == cur){
-// 		head = cur->next;
-// 	}
-// 	if(cur->prev != 0){
-// 		cur->prev->next = cur->next;
-// 	}
-// 	if(cur->next != 0){
-// 		cur->next->prev = cur->prev;
-// 	}
-// 	free(cur);
-// 	printfile(firstOnScreen);
-// }
-
 void
 printlinenums(void)
 {
@@ -510,7 +467,15 @@ void insertchar(char c) {
 	struct row* row = getcursorrow();
 	int column = currChar % WIDTH;
 
-	if (row->linelen == WIDTH) {
+	printf(1, "Linelen: %d; Column: %d\n", row->linelen, column);
+
+	// Inserting the last character with the cursor at the end of the row
+	if (row->linelen == WIDTH - 1 && column == WIDTH-1 && row->next->linenum != row->linenum) {
+		struct row* newrow = insertnewrow(row);
+		newrow->linenum = row->linenum;
+		newrow->linelen = 0;
+	} // Inserting a character into an already full row
+	else if (row->linelen == WIDTH ) {
 
 		struct row* endrow = row;
 		while(endrow->next->linenum == row->linenum && endrow->linelen == WIDTH) {
