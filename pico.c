@@ -180,7 +180,7 @@ drawHeader() {
 
 void
 drawFooter() {
-	char footerstring[80] = " ^Q - Quit       ^X - Cutline                                                   ";
+	char footerstring[80] = " ^Q - Quit  ^X - Cutline                                                        ";
 	struct charandcolor footer[80];
 	for(int i=0; i<80; i++){
 		footer[i].character = footerstring[i];
@@ -549,6 +549,15 @@ handleInput(int i) {
 	// lepl3 in my VM backspace is equal to 8
 	else if(i == 127 || i == 8){
 		backspace();
+	}
+	//end (beginning of row)
+	else if(i == 225) {
+		currChar -= currChar % 80;
+	}
+	//insert (end of row)
+	else if(i==232) {
+		currChar += 79 - currChar%80;
+		leftaligncursor();
 	}
 	else {
 		insertchar((char)i);
