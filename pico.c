@@ -182,7 +182,7 @@ drawHeader() {
 
 void
 drawFooter() {
-	char footerstring[80] = " ^Q - Quit  ^X - Cutline                                                        ";
+	char footerstring[80] = " ^Q - Quit  ^S - Save  ^F - Search  ^X - Cutline  ^H - Help                     ";
 	struct charandcolor footer[80];
 	for(int i=0; i<80; i++){
 		footer[i].character = footerstring[i];
