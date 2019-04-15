@@ -347,7 +347,7 @@ cutline(void) {
 	}
 
 	while(cur != 0) {
-		cur->linenum++;
+		cur->linenum--;
 		cur = cur->next;
 	}
 
