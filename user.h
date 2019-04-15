@@ -40,7 +40,7 @@ void free(void*);
 int atoi(const char*);
 
 // text editor added
-int captsc(int*);
+int captsc(void);
 int freesc(void);
 int updatesc(int, int, struct charandcolor*, int);
 int getkey(void);

@@ -27,7 +27,7 @@ int c = 0;
 struct row {
 	int linenum;
 	int linelen;
-	char line[WIDTH];
+	char* line;
 	struct row* prev;
 	struct row* next;
 };
@@ -42,7 +42,8 @@ struct charandcolor buf[TOTAL_CHARS + 1];
 struct row* head;
 struct row* firstOnScreen;
 struct row* lastOnScreen;
-//struct row* tail;
+
+struct row* currLine;
 
 struct row* getcursorrow();
 
@@ -52,6 +53,7 @@ initLinkedList(int fd, int new_file)
 	head = malloc(sizeof(struct row));
 	struct row* cur = head;
 	cur->linenum = 0;
+	cur->line = malloc(sizeof(char) * 80);
 
 	char c;
 	int column = 0;
@@ -557,7 +559,7 @@ handleInput(int i) {
 
 int
 main(int argc, char *argv[]) {
-	captsc(&c);
+	captsc();
 	drawHeader();
 	drawFooter();
 	int fd;
