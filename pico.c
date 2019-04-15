@@ -52,6 +52,7 @@ initLinkedList(int fd, int new_file)
 	head = malloc(sizeof(struct row));
 	struct row* cur = head;
 	cur->linenum = 0;
+	cur->prev = 0;
 
 	char c;
 	int column = 0;
@@ -92,6 +93,7 @@ initLinkedList(int fd, int new_file)
 		}
 	}
 	cur->linelen = column;
+	cur->next = 0;
 
 	//printf(1, "Read in %d lines to %d rows\n", line, row);
 
@@ -215,14 +217,18 @@ drawFooter() {
 
 void
 scrolldown(void){
-	printfile(firstOnScreen->next);
-	firstOnScreen = firstOnScreen->next;
+	if (firstOnScreen->next) {
+		printfile(firstOnScreen->next);
+		firstOnScreen = firstOnScreen->next;
+	}
 }
 
 void
 scrollup(void){
-	printfile(firstOnScreen->prev);
-	firstOnScreen = firstOnScreen->prev;
+	if (firstOnScreen->prev) {
+		printfile(firstOnScreen->prev);
+		firstOnScreen = firstOnScreen->prev;
+	}
 }
 
 void
@@ -557,6 +563,21 @@ handleInput(int i) {
 	//insert (end of row)
 	else if(i==232) {
 		currChar += 79 - currChar%80;
+		leftaligncursor();
+	}
+	//page up
+	else if(i == 230) {
+		int currCol = currChar % 80;
+		for(int times=0; times < 5; times++)
+			arrowkeys(226);
+		currChar += currCol - currChar % 80;
+		leftaligncursor();
+	}
+	else if(i == 231) {
+		int currCol = currChar % 80;
+		for(int times=0; times < 5; times++)
+			arrowkeys(227);
+		currChar += currCol - currChar % 80;
 		leftaligncursor();
 	}
 	else {
