@@ -399,6 +399,9 @@ backspace(void) {
 		row->linelen--;
 		if(row->linelen >= WIDTH - 1) {
 			unwrapline(row);
+		} 
+		if(row->linelen < WIDTH) {
+			row->line[row->linelen] = 0;
 		}
 		// Move the cursor
 		currChar--;
@@ -418,9 +421,11 @@ backspace(void) {
 			currChar--;
 		} else {
 			changelinenumbers(row, -1);
+			currChar -= (80 - row->prev->linelen);
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
+
 	
 		}
 	}
