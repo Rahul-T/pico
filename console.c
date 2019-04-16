@@ -33,7 +33,7 @@
 #define YELLOW 0x0E
 #define WHITE 0x0F
 #define CURSOR_COLOR 0x70
-#define UI_COLOR 0xc0
+#define TEXT_COLOR 0x0f
 #define TOTAL_CHARS WIDTH * HEIGHT
 #define NUM_BLUE_KEYWORDS 14
 #define NUM_RED_KEYWORDS 18
@@ -301,7 +301,7 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
 
   for(i = 0; (c = content[i].character) != 0; i++) {
 
-    if(color != CURSOR_COLOR && color != UI_COLOR){
+    if(color != CURSOR_COLOR && color == TEXT_COLOR){
       //Strings are orange
       if(c == '\"' && startstring == 0 && startcomment == 0){
         //Indicate start of string
