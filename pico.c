@@ -9,6 +9,7 @@
 #define TOTAL_CHARS WIDTH * HEIGHT
 
 #define UI_COLOR 0x90
+#define SAVE_COLOR 0xE0
 #define UI_ERROR 0x40
 #define SEARCH_COLOR 0xB0
 #define TEXT_COLOR 0x0F
@@ -124,6 +125,7 @@ initLinkedList(int fd, int new_file)
 		blank->prev = cur;
 		cur = blank;
 	}
+	removerow(cur);
 }
 
 void
@@ -504,9 +506,62 @@ newline(void)
 
 // TODO(lepl3) Check if there is a fastest way to save
 void save(void) {
-	if (fd < 0)
-		fd = open("test", O_CREATE | O_RDWR);
-	else
+	// New file
+	if (fd < 0) {
+		int c = 0;
+		const int SAVE_OFFSET = 7;
+		int name_length = 0;
+		char footerstring[46] = " Name:                                       ";
+		char footerhelpstring[36] = "                       ENTER: Done ";
+		struct charandcolor footerhelp[36];
+		for (int i = 0; i < 36; i++)
+			footerhelp[i].character = footerhelpstring[i];
+		struct charandcolor footer[46];
+		updatesc(45, 24, footerhelp, UI_COLOR, cfile);
+		while (c >= 0) {
+			// Show on screen
+			for(int i=0; i<46; i++){
+				footer[i].character = footerstring[i];
+			}
+			updatesc(0, 24, footer, SEARCH_COLOR, cfile);
+			c = getkey();
+			if (c == 0) {
+				continue;
+			}
+			else if (c == 17) {
+				exit();
+			}
+			else if (c == 10) 
+			{
+				char name_file[name_length];
+				for (int i = 0; i < name_length; i++) {
+					name_file[i] = footerstring[SAVE_OFFSET + i];
+				}
+				name_file[name_length + SAVE_OFFSET] = 0;
+				printf(1,"%s\n", name_file);
+				fd = open(name_file, O_CREATE | O_RDWR);
+				char savingfooter[80] = "                                   Saving...                                    ";
+				struct charandcolor savingfooter_helper[80];
+				for (int i = 0; i < 80; i++)
+					savingfooter_helper[i].character = savingfooter[i];
+				updatesc(0, 24, savingfooter_helper, SAVE_COLOR, cfile);
+				break;
+			}
+			// backspace
+			else if (c == 127 || c == 8) {
+				if (name_length > 0) {
+					footerstring[SAVE_OFFSET + --name_length] = ' ';
+				} else {
+					drawFooter();
+					return;
+				}
+			}
+			// Add character to search
+			else if (c != 0) {
+				footerstring[SAVE_OFFSET + name_length++] = (char) c;
+			}
+		}
+	} else
 		fd = open(name_file, O_RDWR);
 
 	printf(1, "File: %d\n", fd);
