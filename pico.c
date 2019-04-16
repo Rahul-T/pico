@@ -429,7 +429,9 @@ backspace(void) {
 			row->line[row->linelen] = 0;
 		}
 		// Move the cursor
+		//int prevChar = currChar;
 		currChar--;
+		//updateCursor(prevChar, currChar);
 	} else {
 		if(row->prev == 0) {
 			return;
@@ -443,10 +445,14 @@ backspace(void) {
 			if(row == firstOnScreen) {
 				scrolldown();
 			}
+			int prevChar = currChar;
 			currChar--;
+			updateCursor(prevChar, currChar);
 		} else {
 			changelinenumbers(row, -1);
+			int prevChar = currChar;
 			currChar -= (80 - row->prev->linelen);
+			updateCursor(prevChar, currChar);
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
