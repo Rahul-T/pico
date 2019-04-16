@@ -252,7 +252,7 @@ int checkallredkeywords(struct charandcolor* content, int i){
 
 
 int
-updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
+updatescreen(int pid, int x, int y, struct charandcolor* content, int color, int cfile) {
   if (pid != screencaptured) {
     return -1;
   }
@@ -302,38 +302,40 @@ updatescreen(int pid, int x, int y, struct charandcolor* content, int color) {
   for(i = 0; (c = content[i].character) != 0; i++) {
 
     if(color != CURSOR_COLOR && color == TEXT_COLOR){
-      //Strings are orange
-      if(c == '\"' && startstring == 0 && startcomment == 0){
-        //Indicate start of string
-        newcolor = LIGHT_ORANGE;
-        startstring = 1;
-      } else if(c == '\"' && startstring == 1 && startcomment == 0){
-        //Indicate end of string
-        newcolor = LIGHT_ORANGE;
-        startstring = 0;
-      } else if(c == '/' && content[i+1].character == '/'){
-        //Comments are dark grey
-        startcomment = 1;
-        newcolor = GREY;
-      } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
-                || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
-                && startstring == 0 && startcomment == 0){
-        //Numbers are purple
-        newcolor = PINK;
-       } else if(startstring == 0 && inword == 0 && startcomment == 0){
-          //Type keywords are blue
-          inword = checkallbluekeywords(content, i);
-          if(inword > 0){
-            newcolor = LIGHT_BLUE;
-          } else {
-              //Other reserved words are red
-              inword = checkallredkeywords(content, i);
-              if(inword > 0){
-                newcolor = LIGHT_GREEN;
-              } else{
-                newcolor = color;
+      if(cfile == 1){
+        //Strings are orange
+        if(c == '\"' && startstring == 0 && startcomment == 0){
+          //Indicate start of string
+          newcolor = LIGHT_ORANGE;
+          startstring = 1;
+        } else if(c == '\"' && startstring == 1 && startcomment == 0){
+          //Indicate end of string
+          newcolor = LIGHT_ORANGE;
+          startstring = 0;
+        } else if(c == '/' && content[i+1].character == '/'){
+          //Comments are dark grey
+          startcomment = 1;
+          newcolor = GREY;
+        } else if((c == '0' || c == '1' || c == '2' || c == '3' || c == '4' 
+                  || c == '5' || c == '6' || c == '7' || c == '8' || c == '9')
+                  && startstring == 0 && startcomment == 0){
+          //Numbers are purple
+          newcolor = PINK;
+         } else if(startstring == 0 && inword == 0 && startcomment == 0){
+            //Type keywords are blue
+            inword = checkallbluekeywords(content, i);
+            if(inword > 0){
+              newcolor = LIGHT_BLUE;
+            } else {
+                //Other reserved words are red
+                inword = checkallredkeywords(content, i);
+                if(inword > 0){
+                  newcolor = LIGHT_GREEN;
+                } else{
+                  newcolor = color;
+                }
               }
-            }
+         }
        }
 
       content[i].color = newcolor;

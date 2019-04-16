@@ -20,7 +20,7 @@ void            bwrite(struct buf*);
 // console.c
 int				capturescreen(int pid, void* handler_voidptr);
 int				freescreen(int pid);
-int 			updatescreen(int pid, int x, int y, struct charandcolor* content, int color);
+int 			updatescreen(int pid, int x, int y, struct charandcolor* content, int color, int cfile);
 int             readkey(int pid);
 void            consoleinit(void);
 void            cprintf(char*, ...);

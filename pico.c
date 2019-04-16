@@ -18,6 +18,7 @@
 
 int currChar = 0;
 int c = 0;
+int cfile = 0;
 // static int lastChar;
 
 // A row is the 80 characters displayed on the screen
@@ -157,7 +158,7 @@ printfile(struct row* first)
 	buf[bufindex].character = '\0';
 	//printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
 	//printf(1, "%s\n", buf);
-	updatesc(0, 1, buf, TEXT_COLOR);
+	updatesc(0, 1, buf, TEXT_COLOR, cfile);
 }
 
 void
@@ -167,21 +168,21 @@ drawHeader() {
 	for(int i=0; i<30; i++){
 		header1[i].character = header1string[i];
 	}
-	updatesc(0, 0, header1, UI_COLOR);
+	updatesc(0, 0, header1, UI_COLOR, cfile);
 
 	char header2string[20] = "        PICO        ";
 	struct charandcolor header2[20];
 	for(int i=0; i<20; i++){
 		header2[i].character = header2string[i];
 	}
-	updatesc(30, 0, header2, UI_COLOR);
+	updatesc(30, 0, header2, UI_COLOR, cfile);
 
 	char header3string[30] = "                         v0.1 ";
 	struct charandcolor header3[30];
 	for(int i=0; i<30; i++){
 		header3[i].character = header3string[i];
 	}
-	updatesc(50, 0, header3, UI_COLOR);
+	updatesc(50, 0, header3, UI_COLOR, cfile);
 }
 
 int
@@ -230,7 +231,7 @@ drawFooter() {
 		footer[78-charsProc++].character = 48 + currCharProc % 10;
 		currCharProc = currCharProc / 10;
 	} while (currCharProc > 0);
-	updatesc(0, 24, footer, UI_COLOR);
+	updatesc(0, 24, footer, UI_COLOR, cfile);
 }
 
 void
@@ -254,9 +255,9 @@ updateCursor(int prev, int curr) {
 	struct charandcolor firstUpdate[2];
 	firstUpdate[1].character = 0;
 	firstUpdate[0].character = buf[prev].character;
-	updatesc(prev, 1, firstUpdate, buf[prev].color);
+	updatesc(prev, 1, firstUpdate, buf[prev].color, cfile);
 	firstUpdate[0].character = buf[curr].character;
-	updatesc(curr, 1, firstUpdate, CURSOR_COLOR);
+	updatesc(curr, 1, firstUpdate, CURSOR_COLOR, cfile);
 }
 
 
@@ -574,14 +575,14 @@ searchMode() {
 	struct charandcolor footerhelp[36];
 	for (int i = 0; i < 36; i++)
 		footerhelp[i].character = footerhelpstring[i];
-	updatesc(45, 24, footerhelp, UI_COLOR);
+	updatesc(45, 24, footerhelp, UI_COLOR, cfile);
 	struct charandcolor footer[46];
 	while (c >= 0) {
 		// Show on screen
 		for(int i=0; i<46; i++){
 			footer[i].character = footerstring[i];
 		}
-		updatesc(0, 24, footer, SEARCH_COLOR);
+		updatesc(0, 24, footer, SEARCH_COLOR, cfile);
 		c = getkey();
 		if (c == 0) {
 			continue;
@@ -733,6 +734,13 @@ main(int argc, char *argv[]) {
 		if((fd = open(argv[1], 0)) < 0){
 			printf(1, "Cannot open %s\n", argv[1]);
 		} else {
+
+			// Check if file has .c extension
+			for(int i = 0; argv[1][i] != '\0'; i++){
+				if(argv[1][i] == '.' && argv[1][i+1] == 'c'){
+					cfile = 1;
+				}
+			}
 			initLinkedList(fd, 0);
 			printfile(head);
 		}
