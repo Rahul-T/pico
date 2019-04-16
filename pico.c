@@ -540,11 +540,6 @@ void save(void) {
 				name_file[name_length + SAVE_OFFSET] = 0;
 				printf(1,"%s\n", name_file);
 				fd = open(name_file, O_CREATE | O_RDWR);
-				char savingfooter[80] = "                                   Saving...                                    ";
-				struct charandcolor savingfooter_helper[80];
-				for (int i = 0; i < 80; i++)
-					savingfooter_helper[i].character = savingfooter[i];
-				updatesc(0, 24, savingfooter_helper, SAVE_COLOR, cfile);
 				break;
 			}
 			// backspace
@@ -563,7 +558,12 @@ void save(void) {
 		}
 	} else
 		fd = open(name_file, O_RDWR);
-
+		
+	char savingfooter[80] = "                                   Saving...                                    ";
+	struct charandcolor savingfooter_helper[80];
+	for (int i = 0; i < 80; i++)
+		savingfooter_helper[i].character = savingfooter[i];
+	updatesc(0, 24, savingfooter_helper, SAVE_COLOR, cfile);
 	printf(1, "File: %d\n", fd);
 	struct row* curr_row = head;
 	while (curr_row->next > 0) {
