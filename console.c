@@ -44,6 +44,7 @@ struct charandcolor {
   int color;
 };
 
+int capturedCursorPos;
 
 char *bluekeywords[NUM_BLUE_KEYWORDS];
 char *redkeywords[NUM_RED_KEYWORDS];
@@ -183,6 +184,16 @@ capturescreen(int pid, void* handler_voidptr) {
   // handler = handler_voidptr;
   // *handlechar = 1;
   screencaptured = pid;
+  // Cursor position: col + 80*row.
+  outb(CRTPORT, 14);
+  capturedCursorPos = inb(CRTPORT+1) << 8;
+  outb(CRTPORT, 15);
+  capturedCursorPos |= inb(CRTPORT+1);
+
+  outb(CRTPORT, 14);
+  outb(CRTPORT+1, -1);
+  outb(CRTPORT, 15);
+  outb(CRTPORT+1, -1);
   release(&cons.lock);
   memmove(crtbackup, crt, sizeof(crt[0])*25*80);
   memset(crt, 0, sizeof(crt[0]) * 25 * 80);
@@ -198,6 +209,10 @@ int
 freescreen(int pid) {
   acquire(&cons.lock);
   if (screencaptured == pid) {
+    outb(CRTPORT, 14);
+    outb(CRTPORT+1, capturedCursorPos>>8);
+    outb(CRTPORT, 15);
+    outb(CRTPORT+1, capturedCursorPos);
     screencaptured = 0;
     release(&cons.lock);
     memmove(crt, crtbackup, sizeof(crt[0])*25*80);
