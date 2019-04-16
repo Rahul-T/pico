@@ -9,6 +9,7 @@
 #define TOTAL_CHARS WIDTH * HEIGHT
 
 #define UI_COLOR 0x90
+#define UI_ERROR 0x40
 #define SEARCH_COLOR 0xB0
 #define TEXT_COLOR 0x0F
 #define CURSOR_COLOR 0x70
@@ -123,7 +124,6 @@ initLinkedList(int fd, int new_file)
 		blank->prev = cur;
 		cur = blank;
 	}
-	removerow(cur);
 }
 
 void
@@ -662,7 +662,7 @@ searchMode() {
 				printfile(firstOnScreen);
 				updateCursor(currChar, currChar);
 			} else {
-				printf(1, "Didn't find it...\n");
+				updatesc(0, 24, footer, UI_ERROR, cfile);
 			}
 		}
 		// backspace
