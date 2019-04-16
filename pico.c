@@ -125,7 +125,6 @@ initLinkedList(int fd, int new_file)
 		blank->prev = cur;
 		cur = blank;
 	}
-	removerow(cur);
 }
 
 void
@@ -558,7 +557,7 @@ void save(void) {
 		}
 	} else
 		fd = open(name_file, O_RDWR);
-		
+
 	char savingfooter[80] = "                                   Saving...                                    ";
 	struct charandcolor savingfooter_helper[80];
 	for (int i = 0; i < 80; i++)
