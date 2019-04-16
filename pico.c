@@ -8,7 +8,8 @@
 #define HEIGHT 23
 #define TOTAL_CHARS WIDTH * HEIGHT
 
-#define UI_COLOR 0xc0
+#define UI_COLOR 0x90
+#define SEARCH_COLOR 0xB0
 #define TEXT_COLOR 0x0F
 #define CURSOR_COLOR 0x70
 
@@ -20,6 +21,7 @@ int currChar = 0;
 int c = 0;
 int fd = -1;
 char* name_file;
+int cfile = 0;
 // static int lastChar;
 
 // A row is the 80 characters displayed on the screen
@@ -48,6 +50,8 @@ struct row* lastOnScreen;
 //struct row* tail;
 
 struct row* getcursorrow();
+struct row* removerow(struct row* row);
+void handleInput(int c);
 
 void
 initLinkedList(int fd, int new_file)
@@ -119,6 +123,7 @@ initLinkedList(int fd, int new_file)
 		blank->prev = cur;
 		cur = blank;
 	}
+	removerow(cur);
 }
 
 void
@@ -156,7 +161,7 @@ printfile(struct row* first)
 	buf[bufindex].character = '\0';
 	//printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
 	//printf(1, "%s\n", buf);
-	updatesc(0, 1, buf, TEXT_COLOR);
+	updatesc(0, 1, buf, TEXT_COLOR, cfile);
 }
 
 void
@@ -166,21 +171,35 @@ drawHeader() {
 	for(int i=0; i<30; i++){
 		header1[i].character = header1string[i];
 	}
-	updatesc(0, 0, header1, UI_COLOR);
+	updatesc(0, 0, header1, UI_COLOR, cfile);
 
 	char header2string[20] = "        PICO        ";
 	struct charandcolor header2[20];
 	for(int i=0; i<20; i++){
 		header2[i].character = header2string[i];
 	}
-	updatesc(30, 0, header2, UI_COLOR);
+	updatesc(30, 0, header2, UI_COLOR, cfile);
 
 	char header3string[30] = "                         v0.1 ";
 	struct charandcolor header3[30];
 	for(int i=0; i<30; i++){
 		header3[i].character = header3string[i];
 	}
-	updatesc(50, 0, header3, UI_COLOR);
+	updatesc(50, 0, header3, UI_COLOR, cfile);
+}
+
+int
+getcursorcol() {
+	int currCharProc = currChar%WIDTH+1;
+	struct row* currRow = getcursorrow();
+	struct row* rowiter = currRow;
+	if (rowiter != 0) {
+		while (rowiter->prev != 0 && rowiter->prev->linenum == rowiter->linenum) {
+			currCharProc += WIDTH;
+			rowiter = rowiter->prev;
+		} 
+	}
+	return currCharProc;
 }
 
 void
@@ -207,7 +226,7 @@ drawFooter() {
 	} while (currCharProc > 0);
 	footer[78-charsProc++].character = 58;
 	// Draw line number 
-	currCharProc = currRow->linenum + 1;
+	currCharProc = getcursorrow()->linenum + 1;
 	if (currCharProc > 74000) {
 		currCharProc = 1;
 	}
@@ -215,12 +234,12 @@ drawFooter() {
 		footer[78-charsProc++].character = 48 + currCharProc % 10;
 		currCharProc = currCharProc / 10;
 	} while (currCharProc > 0);
-	updatesc(0, 24, footer, UI_COLOR);
+	updatesc(0, 24, footer, UI_COLOR, cfile);
 }
 
 void
 scrolldown(void){
-	if (firstOnScreen->next) {
+	if (lastOnScreen->next) {
 		printfile(firstOnScreen->next);
 		firstOnScreen = firstOnScreen->next;
 	}
@@ -239,9 +258,9 @@ updateCursor(int prev, int curr) {
 	struct charandcolor firstUpdate[2];
 	firstUpdate[1].character = 0;
 	firstUpdate[0].character = buf[prev].character;
-	updatesc(prev, 1, firstUpdate, buf[prev].color);
+	updatesc(prev, 1, firstUpdate, buf[prev].color, cfile);
 	firstUpdate[0].character = buf[curr].character;
-	updatesc(curr, 1, firstUpdate, CURSOR_COLOR);
+	updatesc(curr, 1, firstUpdate, CURSOR_COLOR, cfile);
 }
 
 
@@ -280,7 +299,7 @@ arrowkeys(int i){
 	}
 	//ctrl+k (go down)
 	//Second condition avoid the cursor to go down if there is not line written below (lepl3)
-	else if((i == 11 || i == 227) && !(getcursorrow()->next->linelen == -1)){
+	else if((i == 11 || i == 227) && !(getcursorrow()->next==0 || getcursorrow()->next->linelen == -1)){
 		if(currChar < TOTAL_CHARS - WIDTH){
 			currChar += WIDTH;
 		}
@@ -413,7 +432,9 @@ backspace(void) {
 			row->line[row->linelen] = 0;
 		}
 		// Move the cursor
+		//int prevChar = currChar;
 		currChar--;
+		//updateCursor(prevChar, currChar);
 	} else {
 		if(row->prev == 0) {
 			return;
@@ -427,10 +448,14 @@ backspace(void) {
 			if(row == firstOnScreen) {
 				scrolldown();
 			}
+			int prevChar = currChar;
 			currChar--;
+			updateCursor(prevChar, currChar);
 		} else {
 			changelinenumbers(row, -1);
+			int prevChar = currChar;
 			currChar -= (80 - row->prev->linelen);
+			updateCursor(prevChar, currChar);
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
@@ -547,6 +572,115 @@ void insertchar(char c) {
 	printfile(firstOnScreen);
 }
 
+struct row*
+getfirstrow(struct row* row) {
+	int linenum = row->linenum;
+	while (row->prev && row->prev->linenum == linenum) {
+		row = row->prev;
+	}
+	return row;
+}
+
+char
+getcharatpos(struct row* row, int pos) {
+	while (row->next && pos >= 80) {
+		row = row->next;
+		pos -= 80;
+	}
+	if (row->next)
+		return row->line[pos];
+	return 0;
+}
+
+void
+searchMode() {
+	const int SEARCH_OFFSET = 9;
+	int c  = 0;
+	char searchLength = 0;
+	char footerstring[46] = " Search:                                     ";
+	char footerhelpstring[36] = " UP: Prev  DOWN: Next  ENTER: Done ";
+	struct charandcolor footerhelp[36];
+	for (int i = 0; i < 36; i++)
+		footerhelp[i].character = footerhelpstring[i];
+	updatesc(45, 24, footerhelp, UI_COLOR, cfile);
+	struct charandcolor footer[46];
+	while (c >= 0) {
+		// Show on screen
+		for(int i=0; i<46; i++){
+			footer[i].character = footerstring[i];
+		}
+		updatesc(0, 24, footer, SEARCH_COLOR, cfile);
+		c = getkey();
+		if (c == 0) {
+			continue;
+		}
+		// Terminate search mode if quitting
+		if (c == 17) {
+			exit();
+		}
+		// Search down
+		else if (c == 227 || c == 13 || c == 10 || c == 226) {
+			struct row* currSearchRow = getcursorrow();
+			int currSearchCol = currChar % 80 + 1; // Beginning of the match
+			// int currSearchCol = 0;
+			int searchIndex = 0; // Num of chars already compared
+			int found = 0; // Whether it was found or not
+
+			// If up, search from the beginning
+			if (c == 226) {
+				currSearchCol = 0;
+				currSearchRow = head;
+			}
+			while (found == 0 && currSearchRow->next) {
+				if (getcharatpos(currSearchRow, currSearchCol + searchIndex) == footerstring[SEARCH_OFFSET + searchIndex]) {
+					searchIndex++;
+					if (searchIndex >= searchLength) {
+						found = 1;
+					}
+				} else {
+					searchIndex = 0;
+					currSearchCol += 1;
+					if (currSearchCol >= 80) {
+						currSearchRow = currSearchRow->next;
+						currSearchCol = 0;
+					}
+				}
+			}
+			if (found) {
+				struct row* scrollRow = getcursorrow();
+				if (c == 226) {
+					scrollRow = head;
+					firstOnScreen = head;
+					currChar = 0;
+				}
+				while (scrollRow != currSearchRow) {
+						arrowkeys(227);
+						scrollRow = scrollRow->next;
+					}
+					// Update screen
+					currChar += currSearchCol - currChar%80;
+				printfile(firstOnScreen);
+				updateCursor(currChar, currChar);
+			} else {
+				printf(1, "Didn't find it...\n");
+			}
+		}
+		// backspace
+		else if (c == 127 || c == 8) {
+			if (searchLength > 0) {
+				footerstring[SEARCH_OFFSET + --searchLength] = ' ';
+			} else {
+				break;
+			}
+		}
+		// Add character to search
+		else if (c != 0) {
+			footerstring[SEARCH_OFFSET + searchLength++] = (char) c;
+		}
+	}
+	drawFooter();
+}
+
 void
 handleInput(int i) {
 	//printf(1, "Key pressed: %d\n", i);
@@ -594,6 +728,7 @@ handleInput(int i) {
 		currChar += currCol - currChar % 80;
 		leftaligncursor();
 	}
+	//page down
 	else if(i == 231) {
 		int currCol = currChar % 80;
 		for(int times=0; times < 5; times++)
@@ -604,6 +739,10 @@ handleInput(int i) {
 	//save file
 	else if (i == 19) {
 		save();
+	}
+	// ctrl f (search)
+	else if(i == 6) {
+		searchMode();
 	}
 	else {
 		insertchar((char)i);
@@ -626,6 +765,13 @@ main(int argc, char *argv[]) {
 		if((fd = open(argv[1], O_RDWR)) < 0){
 			printf(1, "Cannot open %s\n", argv[1]);
 		} else {
+
+			// Check if file has .c extension
+			for(int i = 0; argv[1][i] != '\0'; i++){
+				if(argv[1][i] == '.' && argv[1][i+1] == 'c'){
+					cfile = 1;
+				}
+			}
 			initLinkedList(fd, 0);
 			printfile(head);
 		}
