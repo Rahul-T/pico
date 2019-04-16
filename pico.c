@@ -2,6 +2,7 @@
 #include "stat.h"
 #include "user.h"
 #include "console.h"
+#include "fcntl.h"
 
 #define WIDTH 80
 #define HEIGHT 23
@@ -17,6 +18,8 @@
 
 int currChar = 0;
 int c = 0;
+int fd = -1;
+char* name_file;
 // static int lastChar;
 
 // A row is the 80 characters displayed on the screen
@@ -474,6 +477,24 @@ newline(void)
 	return;
 }
 
+// TODO(lepl3) Check if there is a fastest way to save
+void save(void) {
+	if (fd < 0)
+		fd = open("test", O_CREATE | O_RDWR);
+	else
+		fd = open(name_file, O_RDWR);
+
+	printf(1, "File: %d\n", fd);
+	struct row* curr_row = head;
+	while (curr_row->next > 0) {
+		if (write(fd, &curr_row->line, WIDTH) != WIDTH)
+			printf(1, "ERROR WRITING\n");
+		curr_row = curr_row->next;
+	}
+	close(fd);
+	exit();
+}
+
 void insertchar(char c) {
 	struct row* row = getcursorrow();
 	int column = currChar % WIDTH;
@@ -580,6 +601,10 @@ handleInput(int i) {
 		currChar += currCol - currChar % 80;
 		leftaligncursor();
 	}
+	//save file
+	else if (i == 19) {
+		save();
+	}
 	else {
 		insertchar((char)i);
 	}
@@ -595,10 +620,10 @@ main(int argc, char *argv[]) {
 	captsc(&c);
 	drawHeader();
 	drawFooter();
-	int fd;
 
 	if (argc == 2) {
-		if((fd = open(argv[1], 0)) < 0){
+		name_file = argv[1];
+		if((fd = open(argv[1], O_RDWR)) < 0){
 			printf(1, "Cannot open %s\n", argv[1]);
 		} else {
 			initLinkedList(fd, 0);
@@ -617,6 +642,5 @@ main(int argc, char *argv[]) {
 	}
 	read(0, 0, 100);
 	freesc();
-
 	exit();
 }
