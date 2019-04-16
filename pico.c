@@ -200,14 +200,22 @@ getcursorcol() {
 
 void
 drawFooter() {
-	char footerstring[80] = " ^Q - Quit  ^X - Cutline                                                        ";
+	char footerstring[80] = " ^Q - Quit  ^S - Save  ^F - Search  ^X - Cutline  ^H - Help                     ";
 	struct charandcolor footer[80];
 	for(int i=0; i<80; i++){
 		footer[i].character = footerstring[i];
 	}
 	char charsProc = 0;
 	// Draw column number
-	int currCharProc = getcursorcol();
+	int currCharProc = currChar%WIDTH+1;
+	struct row* currRow = getcursorrow();
+	struct row* rowiter = currRow;
+	if (rowiter != 0) {
+		while (rowiter->prev != 0 && rowiter->prev->linenum == rowiter->linenum) {
+			currCharProc += WIDTH;
+			rowiter = rowiter->prev;
+		} 
+	}
 	do {
 		footer[78-charsProc++].character = 48 + currCharProc % 10;
 		currCharProc = currCharProc / 10;
@@ -230,7 +238,6 @@ scrolldown(void){
 	if (lastOnScreen->next) {
 		printfile(firstOnScreen->next);
 		firstOnScreen = firstOnScreen->next;
-		printf(1, "%s: %p\n", lastOnScreen->line, lastOnScreen->next);
 	}
 }
 
