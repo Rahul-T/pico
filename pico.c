@@ -160,7 +160,7 @@ printfile(struct row* first)
 	lastOnScreen = cur;
 
 	while(bufindex < TOTAL_CHARS) {
-		buf[bufindex++].character = ' ';
+		buf[bufindex++].character = BLANK_CHAR;
 	}
 
 	buf[bufindex].character = '\0';
@@ -412,7 +412,6 @@ unwrapline(struct row* row) {
 			row->linelen = row->linelen + row->next->linelen;
 			memset(row->line + row->linelen, 0, WIDTH-row->linelen);
 			removerow(row->next);
-			printf(1, "%s\n", row->next->line);
 		} else {
 			memmove(row->line + row->linelen, row->next->line, freespace);
 			memmove(row->next->line, row->next->line + freespace, WIDTH-freespace);
@@ -442,7 +441,7 @@ backspace(void) {
 		currChar--;
 		//updateCursor(prevChar, currChar);
 	} else {
-		if(row->prev == 0) {
+		if(row->prev == 0 || row == firstOnScreen) {
 			return;
 		}
 
@@ -469,7 +468,6 @@ backspace(void) {
 			currChar -= (80 - row->prev->linelen);
 			updateCursor(prevChar, currChar);
 			int prevlinelen = row->linelen;
-			printf(1, "INITlinelen: %d\n", prevlinelen);
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
@@ -481,7 +479,6 @@ backspace(void) {
 				for (int i = 0; i < WIDTH; i++)
 					row->line[i] = 0;
 			}
-			printf(1, "AFTERlinelen: %d\n", row->linelen);
 		}
 	}
 
