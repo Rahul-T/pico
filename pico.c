@@ -455,8 +455,10 @@ backspace(void) {
 			updateCursor(prevChar, currChar);
 		} else {
 		    if (row->next == 0 || row == lastOnScreen) {
-				firstOnScreen = firstOnScreen->prev;
-				currChar += 80;
+		    	if (firstOnScreen->prev != 0) {
+		    		firstOnScreen = firstOnScreen->prev;
+					currChar += 80;
+		    	}
 			}
 			changelinenumbers(row, -1);
 			int prevChar = currChar;
@@ -465,9 +467,9 @@ backspace(void) {
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
-			
-			// for (int i = 0; i < WIDTH; i++)
-				// row->line[i] = 0;
+
+			for (int i = 0; i < WIDTH; i++)
+				row->line[i] = 0;
 		}
 	}
 
