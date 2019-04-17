@@ -7,7 +7,7 @@
 int main() {
     printf("Hello World");
     for(int i = 0; i < 3 i++){
-        //Wow look at all this sytax highlighting
+        //Wow look at all this syntax highlighting
         continue;
     }
     return 0;

@@ -516,8 +516,8 @@ newline(void)
 	} else {
 		currChar = (currChar/WIDTH + 1) * WIDTH;
 	}
+	currChar = currChar / WIDTH * WIDTH;
 	printfile(firstOnScreen);
-	leftaligncursor();
 	return;
 }
 
