@@ -454,7 +454,7 @@ backspace(void) {
 			currChar--;
 			updateCursor(prevChar, currChar);
 		} else {
-		    if (row->next == 0) {
+		    if (row->next == 0 || row == lastOnScreen) {
 				firstOnScreen = firstOnScreen->prev;
 				currChar += 80;
 			}
@@ -465,6 +465,8 @@ backspace(void) {
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
+		    for (int i = 0; i < WIDTH; i++)
+				row->line[i] = 0;
 		}
 	}
 
@@ -503,8 +505,6 @@ newline(void)
 	} else {
 		currChar = (currChar/WIDTH + 1) * WIDTH;
 	}
-	for (int i = 0; i < WIDTH; i++)
-		row->next->line[i] = 0;
 	printfile(firstOnScreen);
 	return;
 }
