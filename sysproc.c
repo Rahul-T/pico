@@ -107,8 +107,9 @@ sys_freesc(void)
 
 int
 sys_updatesc(void) {
-  int x, y, color;
-  char* content;
+  int x, y, color, cfile;
+  //char* content;
+  struct charandcolor* content;
   if(argint(0, &x) < 0)
     return -1;
   if(argint(1, &y) < 0)
@@ -117,7 +118,9 @@ sys_updatesc(void) {
     return -1;
   if(argint(3, &color) < 0)
     return -1;
-  return updatescreen(myproc()->pid, x, y, content, color);
+  if(argint(4, &cfile) < 0)
+    return -1;
+  return updatescreen(myproc()->pid, x, y, content, color, cfile);
 }
 
 int 

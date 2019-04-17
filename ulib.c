@@ -97,9 +97,16 @@ memmove(void *vdst, void *vsrc, int n)
 {
   char *dst, *src;
 
-  dst = vdst;
-  src = vsrc;
-  while(n-- > 0)
-    *dst++ = *src++;
+  if(vdst<=vsrc) {
+    dst = vdst;
+    src = vsrc;
+    while(n-- > 0)
+      *dst++ = *src++;
+  } else {
+    dst = vdst + n - 1;
+    src = vsrc + n - 1;
+    while(n-- > 0)
+      *dst-- = *src--;
+  }
   return vdst;
 }
