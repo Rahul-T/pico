@@ -181,7 +181,7 @@ drawHeader() {
 	}
 	updatesc(30, 0, header2, UI_COLOR, cfile);
 
-	char header3string[30] = "                         v0.1 ";
+	char header3string[30] = "                        v58.1 ";
 	struct charandcolor header3[30];
 	for(int i=0; i<30; i++){
 		header3[i].character = header3string[i];
@@ -407,7 +407,10 @@ unwrapline(struct row* row) {
 			memmove(row->line + row->linelen, row->next->line, row->next->linelen);
 			row->linelen = row->linelen + row->next->linelen;
 			memset(row->line + row->linelen, 0, WIDTH-row->linelen);
+			printf(1, "%s\n", row->line);
+			printf(1, "%s\n", row->next->line);
 			removerow(row->next);
+			printf(1, "%s\n", row->next->line);
 		} else {
 			memmove(row->line + row->linelen, row->next->line, freespace);
 			memmove(row->next->line, row->next->line + freespace, WIDTH-freespace);
@@ -453,6 +456,11 @@ backspace(void) {
 			currChar--;
 			updateCursor(prevChar, currChar);
 		} else {
+			if (row->next == 0) {
+				scrollup();
+				currChar += 80;
+			}
+			printf(1,"==========\n");
 			changelinenumbers(row, -1);
 			int prevChar = currChar;
 			currChar -= (80 - row->prev->linelen);
@@ -460,8 +468,6 @@ backspace(void) {
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
-
-	
 		}
 	}
 
@@ -493,8 +499,10 @@ newline(void)
 		nextrow = nextrow->next;
 	}
 
+	// Only changing the firstOnScreen was not updating the UI
 	if(row == lastOnScreen) {
-		firstOnScreen = firstOnScreen->next;
+		scrolldown();
+		leftaligncursor();
 	} else {
 		currChar = (currChar/WIDTH + 1) * WIDTH;
 	}
