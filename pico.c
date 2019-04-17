@@ -466,8 +466,8 @@ backspace(void) {
 				unwrapline(row->prev);
 			}
 			
-			for (int i = 0; i < WIDTH; i++)
-				row->line[i] = 0;
+			// for (int i = 0; i < WIDTH; i++)
+				// row->line[i] = 0;
 		}
 	}
 
