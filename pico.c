@@ -524,6 +524,11 @@ newline(void)
 // TODO(lepl3) Check if there is a fastest way to save
 void save(void) {
 	// New file
+	if (name_file != 0 && fd >= 0)
+		fd = open(name_file, O_RDWR);
+	else if(name_file != 0 && fd < 0)
+		fd = open(name_file, O_CREATE | O_RDWR);
+
 	if (fd < 0) {
 		int c = 0;
 		const int SAVE_OFFSET = 7;
@@ -573,8 +578,7 @@ void save(void) {
 				footerstring[SAVE_OFFSET + name_length++] = (char) c;
 			}
 		}
-	} else
-		fd = open(name_file, O_RDWR);
+	}
 
 	char savingfooter[80] = "                                   Saving...                                    ";
 	struct charandcolor savingfooter_helper[80];
@@ -835,9 +839,9 @@ main(int argc, char *argv[]) {
 	if (argc == 2) {
 		name_file = argv[1];
 		if((fd = open(argv[1], O_RDWR)) < 0){
-			printf(1, "Cannot open %s\n", argv[1]);
+			printf(1, "New file created %s\n", argv[1]);
+			initLinkedList(NO_FILE, 1);
 		} else {
-
 			// Check if file has .c extension
 			for(int i = 0; argv[1][i] != '\0'; i++){
 				if(argv[1][i] == '.' && argv[1][i+1] == 'c'){
