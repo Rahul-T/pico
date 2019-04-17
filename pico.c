@@ -511,13 +511,13 @@ newline(void)
 	}
 
 	// Only changing the firstOnScreen was not updating the UI
-	if(row == lastOnScreen) {
+	if(row == lastOnScreen && lastOnScreen->linenum >= 21) {
 		firstOnScreen = firstOnScreen->next;
-		leftaligncursor();
 	} else {
 		currChar = (currChar/WIDTH + 1) * WIDTH;
 	}
 	printfile(firstOnScreen);
+	leftaligncursor();
 	return;
 }
 
