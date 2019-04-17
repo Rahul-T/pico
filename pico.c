@@ -441,7 +441,7 @@ backspace(void) {
 		currChar--;
 		//updateCursor(prevChar, currChar);
 	} else {
-		if(row->prev == 0 || row == firstOnScreen) {
+		if(row->prev == 0) {
 			return;
 		}
 
@@ -457,7 +457,7 @@ backspace(void) {
 			currChar--;
 			updateCursor(prevChar, currChar);
 		} else {
-		    if (row->next == 0 || row == lastOnScreen) {
+		    if (row->next == 0 || row == lastOnScreen || lastOnScreen->next == 0) {
 		    	if (firstOnScreen->prev != 0) {
 		    		firstOnScreen = firstOnScreen->prev;
 					currChar += 80;
