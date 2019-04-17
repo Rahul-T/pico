@@ -464,12 +464,20 @@ backspace(void) {
 			int prevChar = currChar;
 			currChar -= (80 - row->prev->linelen);
 			updateCursor(prevChar, currChar);
+			int prevlinelen = row->linelen;
+			printf(1, "INITlinelen: %d\n", prevlinelen);
 			if(row->prev->linelen < WIDTH) {
 				unwrapline(row->prev);
 			}
-
-			for (int i = 0; i < WIDTH; i++)
-				row->line[i] = 0;
+			if(row->linelen != prevlinelen){
+				for (int i = row->linelen; i < WIDTH; i++)
+					row->line[i] = 0;
+			}
+			else{
+				for (int i = 0; i < WIDTH; i++)
+					row->line[i] = 0;
+			}
+			printf(1, "AFTERlinelen: %d\n", row->linelen);
 		}
 	}
 
