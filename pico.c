@@ -407,8 +407,6 @@ unwrapline(struct row* row) {
 			memmove(row->line + row->linelen, row->next->line, row->next->linelen);
 			row->linelen = row->linelen + row->next->linelen;
 			memset(row->line + row->linelen, 0, WIDTH-row->linelen);
-			printf(1, "%s\n", row->line);
-			printf(1, "%s\n", row->next->line);
 			removerow(row->next);
 			printf(1, "%s\n", row->next->line);
 		} else {
@@ -456,11 +454,10 @@ backspace(void) {
 			currChar--;
 			updateCursor(prevChar, currChar);
 		} else {
-			if (row->next == 0) {
-				scrollup();
+		    if (row->next == 0) {
+				firstOnScreen = firstOnScreen->prev;
 				currChar += 80;
 			}
-			printf(1,"==========\n");
 			changelinenumbers(row, -1);
 			int prevChar = currChar;
 			currChar -= (80 - row->prev->linelen);
@@ -501,7 +498,7 @@ newline(void)
 
 	// Only changing the firstOnScreen was not updating the UI
 	if(row == lastOnScreen) {
-		scrolldown();
+		firstOnScreen = firstOnScreen->next;
 		leftaligncursor();
 	} else {
 		currChar = (currChar/WIDTH + 1) * WIDTH;
