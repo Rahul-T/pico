@@ -538,7 +538,7 @@ void save(void) {
 			else if (c == 17) {
 				exit();
 			}
-			else if (c == 10) 
+			else if (c == 10 || c == 13) 
 			{
 				char name_file[name_length];
 				for (int i = 0; i < name_length; i++) {
