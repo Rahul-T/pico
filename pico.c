@@ -503,7 +503,8 @@ newline(void)
 	} else {
 		currChar = (currChar/WIDTH + 1) * WIDTH;
 	}
-
+	for (int i = 0; i < WIDTH; i++)
+		row->next->line[i] = 0;
 	printfile(firstOnScreen);
 	return;
 }
