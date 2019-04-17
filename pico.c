@@ -159,6 +159,10 @@ printfile(struct row* first)
 	}
 	lastOnScreen = cur;
 
+	while(bufindex < TOTAL_CHARS) {
+		buf[bufindex++].character = ' ';
+	}
+
 	buf[bufindex].character = '\0';
 	//printf(1, "asdfasdfdsf: %d", lastOnScreen->linenum);
 	//printf(1, "%s\n", buf);
