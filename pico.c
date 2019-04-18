@@ -10,7 +10,7 @@
 
 #define UI_COLOR 0x90
 #define SAVE_COLOR 0xE0
-#define UI_ERROR 0x40
+#define UI_ERROR 0xC0
 #define SEARCH_COLOR 0xB0
 #define TEXT_COLOR 0x0F
 #define CURSOR_COLOR 0x70
@@ -209,7 +209,7 @@ getcursorcol() {
 
 void
 drawFooter() {
-	char footerstring[80] = " ^Q - Quit  ^S - Save  ^F - Search  ^X - Cutline  ^H - Help                     ";
+	char footerstring[80] = " ^Q - Quit  ^S - Save  ^F - Search  ^X - Cutline  ^P - Help                     ";
 	struct charandcolor footer[80];
 	for(int i=0; i<80; i++){
 		footer[i].character = footerstring[i];
@@ -226,17 +226,17 @@ drawFooter() {
 		} 
 	}
 	do {
-		footer[78-charsProc++].character = 48 + currCharProc % 10;
+		footer[77-charsProc++].character = 48 + currCharProc % 10;
 		currCharProc = currCharProc / 10;
 	} while (currCharProc > 0);
-	footer[78-charsProc++].character = 58;
+	footer[77-charsProc++].character = 58;
 	// Draw line number 
 	currCharProc = getcursorrow()->linenum + 1;
 	if (currCharProc > 74000) {
 		currCharProc = 1;
 	}
 	do {
-		footer[78-charsProc++].character = 48 + currCharProc % 10;
+		footer[77-charsProc++].character = 48 + currCharProc % 10;
 		currCharProc = currCharProc / 10;
 	} while (currCharProc > 0);
 	updatesc(0, 24, footer, UI_COLOR, cfile);
@@ -666,6 +666,7 @@ getcharatpos(struct row* row, int pos) {
 
 void
 searchMode() {
+	printfile(firstOnScreen);
 	const int SEARCH_OFFSET = 9;
 	int c  = 0;
 	char searchLength = 0;
@@ -676,18 +677,18 @@ searchMode() {
 		footerhelp[i].character = footerhelpstring[i];
 	updatesc(45, 24, footerhelp, UI_COLOR, cfile);
 	struct charandcolor footer[46];
+	for(int i=0; i<46; i++){
+		footer[i].character = footerstring[i];
+	}
+	updatesc(0, 24, footer, SEARCH_COLOR, cfile);
 	while (c >= 0) {
 		// Show on screen
-		for(int i=0; i<46; i++){
-			footer[i].character = footerstring[i];
-		}
-		updatesc(0, 24, footer, SEARCH_COLOR, cfile);
 		c = getkey();
 		if (c == 0) {
 			continue;
 		}
 		// Terminate search mode if quitting
-		if (c == 17) {
+		else if (c == 17) {
 			exit();
 		}
 		// Search down
@@ -744,13 +745,69 @@ searchMode() {
 			} else {
 				break;
 			}
+			for(int i=0; i<46; i++){
+				footer[i].character = footerstring[i];
+			}
+			updatesc(0, 24, footer, SEARCH_COLOR, cfile);
+		}
+		// Ctrl F to quit search
+		else if (c == 6) {
+			break;
 		}
 		// Add character to search
 		else if (c != 0) {
 			footerstring[SEARCH_OFFSET + searchLength++] = (char) c;
+			for(int i=0; i<46; i++){
+				footer[i].character = footerstring[i];
+			}
+			updatesc(0, 24, footer, SEARCH_COLOR, cfile);
 		}
 	}
 	drawFooter();
+}
+
+void
+helpMode() {
+	for (int i = 0; i < TOTAL_CHARS; i++) {
+		buf[i].character = BLANK_CHAR;
+	}
+	const int XOFFSET = 18;
+	const int YOFFSET = 3;
+	char allHelps[][80] = {
+		"+---------------- MOVEMENT ----------------+",
+		// "|                                          |",
+		"| Arrow Keys: Move the cursor              |",
+		"| PageUp, PageDown: Scroll the screen      |",
+		"| End: Go to beginning of line             |",
+		"| Insert: Go to end of line                |",
+		"| ^X: Cut line                             |",
+		// "|                                          |",
+		"+----------------- SEARCH -----------------+",
+		// "|                                          |",
+		"| ^F: Enter/Exit search mode               |",
+		"| KeyUp: Find first occurrence             |",
+		"| KeyDown, Enter: Find next occurrence     |",
+		// "|                                          |",
+		"+---------------- FILE IO -----------------+",
+		// "|                                          |",
+		"| ^S: Save file                            |",
+		"| ^Q: Quit pico                            |",
+		// "|                                          |",
+		"+------------------------------------------+",
+		"",
+		"    Made by Alex, Luis, Matias and Rahul    ",
+		"           Press Enter to go back           "
+	};
+	for (int i = 0; i < 16; i++) {
+		for (int j = 0; j < WIDTH && allHelps[i][j] != 0; j++) {
+			buf[WIDTH*(i+YOFFSET) + j + XOFFSET].character = allHelps[i][j];
+		}
+	}
+
+	updatesc(0, 1, buf, TEXT_COLOR, 0);
+	while (getkey() != 10);
+	printfile(firstOnScreen);
+	updateCursor(currChar, currChar);
 }
 
 void
@@ -811,6 +868,10 @@ handleInput(int i) {
 	//save file
 	else if (i == 19) {
 		save();
+	}
+	//help
+	else if (i == 16) {
+		helpMode();
 	}
 	// ctrl f (search)
 	else if(i == 6) {
