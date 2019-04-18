@@ -588,8 +588,15 @@ void save(void) {
 	printf(1, "File: %d\n", fd);
 	struct row* curr_row = head;
 	while (curr_row->next > 0) {
-		if (write(fd, &curr_row->line, WIDTH) != WIDTH)
-			printf(1, "ERROR WRITING\n");
+		if (curr_row->linenum == curr_row->next->linenum) {
+			if (write(fd, &curr_row->line, WIDTH) != WIDTH)
+				printf(1, "ERROR WRITING\n");
+		} else {
+			if (write(fd, &curr_row->line, curr_row->linelen%WIDTH) != curr_row->linelen%WIDTH)
+				printf(1, "ERROR WRITING\n");
+			if (write(fd, "\n", 1) != 1)
+				printf(1, "ERROR WRITING\n");
+		}
 		curr_row = curr_row->next;
 	}
 	close(fd);
@@ -599,8 +606,6 @@ void save(void) {
 void insertchar(char c) {
 	struct row* row = getcursorrow();
 	int column = currChar % WIDTH;
-
-	printf(1, "Linelen: %d; Column: %d\n", row->linelen, column);
 
 	// Inserting the last character with the cursor at the end of the row
 	if (row->linelen == WIDTH - 1 && column == WIDTH-1 && row->next->linenum != row->linenum) {
@@ -809,7 +814,10 @@ helpMode() {
 	}
 
 	updatesc(0, 1, buf, TEXT_COLOR, 0);
-	while (getkey() != 10);
+  int c = getkey();
+  while (c == 0) {
+    c = getkey();
+  }
 	printfile(firstOnScreen);
 	updateCursor(currChar, currChar);
 }
@@ -884,7 +892,6 @@ handleInput(int i) {
 	else {
 		insertchar((char)i);
 	}
-	printf(1, "%d\n", i);
 	updateCursor(prevChar, currChar);
 	drawFooter();
 	printlinenums();
@@ -899,16 +906,17 @@ main(int argc, char *argv[]) {
 
 	if (argc == 2) {
 		name_file = argv[1];
+		// Check if file has .c extension
+		for(int i = 0; argv[1][i] != '\0'; i++){
+			if(argv[1][i] == '.' && argv[1][i+1] == 'c'){
+				cfile = 1;
+				break;
+			}
+		}
 		if((fd = open(argv[1], O_RDWR)) < 0){
 			printf(1, "New file created %s\n", argv[1]);
 			initLinkedList(NO_FILE, 1);
 		} else {
-			// Check if file has .c extension
-			for(int i = 0; argv[1][i] != '\0'; i++){
-				if(argv[1][i] == '.' && argv[1][i+1] == 'c'){
-					cfile = 1;
-				}
-			}
 			initLinkedList(fd, 0);
 			printfile(head);
 		}

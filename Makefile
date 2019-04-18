@@ -176,8 +176,8 @@ UPROGS=\
 	_zombie\
 	_pico\
 
-fs.img: mkfs README test.c $(UPROGS)
-	./mkfs fs.img README test.c $(UPROGS)
+fs.img: mkfs README test.c pico.c $(UPROGS)
+	./mkfs fs.img README test.c pico.c $(UPROGS)
 
 -include *.d
 
@@ -190,7 +190,7 @@ clean:
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
-PRINT = runoff.list runoff.spec README toc.hdr toc.ftr test.c $(FILES)
+PRINT = runoff.list runoff.spec README toc.hdr toc.ftr test.c pico.c $(FILES)
 
 xv6.pdf: $(PRINT)
 	./runoff
